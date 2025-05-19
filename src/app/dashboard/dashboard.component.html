@@ -1,0 +1,685 @@
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <h2>Venus</h2>
+    </div>
+    <nav class="nav-menu">
+      <ul>
+        <li [class.active]="activeSection === 'dashboard'" (click)="showSection('dashboard')">
+          <i class="fas fa-tachometer-alt"></i> Tableau de bord
+        </li>
+        <li [class.active]="activeSection === 'students'" (click)="showSection('students')">
+          <i class="fas fa-users"></i> Étudiants
+        </li>
+        <li [class.active]="activeSection === 'teachers'" (click)="showSection('teachers')">
+          <i class="fas fa-chalkboard-teacher"></i> Enseignants
+        </li>
+        <li [class.active]="activeSection === 'communication'" (click)="showSection('communication')">
+          <i class="fas fa-comments"></i> Communication
+        </li>
+        <li [class.active]="activeSection === 'data'" (click)="showSection('data')">
+          <i class="fas fa-database"></i> Données supplémentaires
+        </li>
+        <li [class.active]="activeSection === 'settings'" (click)="showSection('settings')">
+          <i class="fas fa-cog"></i> Paramètres
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <h1>{{ 
+          activeSection === 'dashboard' ? 'Tableau de bord' : 
+          activeSection === 'students' ? 'Gestion des étudiants' : 
+          activeSection === 'teachers' ? 'Gestion des enseignants' : 
+          activeSection === 'communication' ? 'Communication' : 
+          activeSection === 'data' ? 'Données supplémentaires' :
+          'Paramètres' 
+        }}</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-refresh" (click)="refreshAll()">
+          <i class="fas fa-sync-alt"></i> Rafraîchir
+        </button>
+        <div class="user-profile">
+          <span>Admin</span>
+          <div class="avatar">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Section -->
+    <div *ngIf="activeSection === 'dashboard'" class="dashboard-section">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #4BC0C0;">
+            <i class="fas fa-user-graduate"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.activeStudents }}</h3>
+            <p>Étudiants actifs</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #FF6384;">
+            <i class="fas fa-chalkboard-teacher"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.teachersCount }}</h3>
+            <p>Enseignants</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #FFCE56;">
+            <i class="fas fa-lock"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.lockedAccounts }}</h3>
+            <p>Comptes verrouillés</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #9966FF;">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.lateStudents }}</h3>
+            <p>Retards</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #36A2EB;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.studentsWithExcessiveAbsences }}</h3>
+            <p>Absences excessives</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #8AC24A;">
+            <i class="fas fa-database"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.totalAdditionalData }}</h3>
+            <p>Données supplémentaires</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-container">
+          <canvas #activityChart></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas #classChart></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas #absenceChart></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas #statusChart></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas #dataChart></canvas>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <button class="btn btn-primary" (click)="refreshChartData()">
+          <i class="fas fa-sync-alt"></i> Actualiser les graphiques
+        </button>
+        <button class="btn btn-warning" (click)="checkAbsencesAndSendAlerts()">
+          <i class="fas fa-bell"></i> Vérifier les absences
+        </button>
+      </div>
+    </div>
+
+    <!-- Students Section -->
+    <div *ngIf="activeSection === 'students'" class="students-section">
+      <div class="section-header">
+        <h2>Gestion des étudiants</h2>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="openModal('add-student')">
+            <i class="fas fa-plus"></i> Ajouter
+          </button>
+          <button class="btn btn-success" (click)="unlockSelectedStudents()" [disabled]="selectedStudents.length === 0">
+            <i class="fas fa-unlock"></i> Déverrouiller
+          </button>
+          <button class="btn btn-warning" (click)="lockSelectedStudents()" [disabled]="selectedStudents.length === 0">
+            <i class="fas fa-lock"></i> Verrouiller
+          </button>
+          <button class="btn btn-danger" (click)="deleteSelectedStudents()" [disabled]="selectedStudents.length === 0">
+            <i class="fas fa-trash"></i> Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" [checked]="selectAllStudents" (change)="toggleSelectAll('students', $event)">
+              </th>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Email</th>
+              <th>Classe</th>
+              <th>Absences</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of students" [class.locked]="student.status === 'locked'">
+              <td>
+                <input type="checkbox" [checked]="selectedStudents.includes(student.id)" 
+                       (change)="toggleSelection('student', student.id, $event)">
+              </td>
+              <td>{{ student.id }}</td>
+              <td>{{ student.nom }}</td>
+              <td>{{ student.prenom }}</td>
+              <td>{{ student.email }}</td>
+              <td>{{ student.classe || 'Non assigné' }}</td>
+              <td>
+                <span [class.warning]="(student.absences || 0) >= 3">
+                  {{ student.absences || 0 }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [class.active]="student.status === 'active'" 
+                      [class.locked]="student.status === 'locked'">
+                  {{ student.status === 'active' ? 'Actif' : 'Verrouillé' }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn btn-sm btn-info" (click)="openModal('edit-student', student)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" (click)="toggleStudentLockStatus(student.id)">
+                  <i class="fas" [class.fa-lock]="student.status === 'active'" 
+                     [class.fa-unlock]="student.status === 'locked'"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteStudent(student.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Teachers Section -->
+    <div *ngIf="activeSection === 'teachers'" class="teachers-section">
+      <div class="section-header">
+        <h2>Gestion des enseignants</h2>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="openModal('add-teacher')">
+            <i class="fas fa-plus"></i> Ajouter
+          </button>
+          <button class="btn btn-danger" (click)="deleteSelectedTeachers()" [disabled]="selectedTeachers.length === 0">
+            <i class="fas fa-trash"></i> Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" [checked]="selectAllTeachers" (change)="toggleSelectAll('teachers', $event)">
+              </th>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Email</th>
+              <th>Matières</th>
+              <th>Expérience</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let teacher of teachers">
+              <td>
+                <input type="checkbox" [checked]="selectedTeachers.includes(teacher.id)" 
+                       (change)="toggleSelection('teacher', teacher.id, $event)">
+              </td>
+              <td>{{ teacher.id }}</td>
+              <td>{{ teacher.nom }}</td>
+              <td>{{ teacher.prenom }}</td>
+              <td>{{ teacher.email }}</td>
+              <td>
+                <span *ngIf="teacher.matieres && teacher.matieres.length > 0">
+                  {{ teacher.matieres.join(', ') }}
+                </span>
+                <span *ngIf="!teacher.matieres || teacher.matieres.length === 0">
+                  Non spécifié
+                </span>
+              </td>
+              <td>{{ teacher.nbAnneeExperience }} ans</td>
+              <td class="actions">
+                <button class="btn btn-sm btn-info" (click)="openModal('edit-teacher', teacher)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteTeacher(teacher.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Communication Section -->
+    <div *ngIf="activeSection === 'communication'" class="communication-section">
+      <div class="section-header">
+        <h2>Communication</h2>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="openModal('meeting')" [disabled]="selectedTeachers.length === 0">
+            <i class="fas fa-calendar-alt"></i> Planifier réunion
+          </button>
+          <button class="btn btn-success" (click)="openModal('conge')" [disabled]="selectedTeachers.length !== 1">
+            <i class="fas fa-umbrella-beach"></i> Demander congé
+          </button>
+        </div>
+      </div>
+
+      <div class="communication-content">
+        <div class="selected-participants" *ngIf="selectedTeachers.length > 0">
+          <h3>Participants sélectionnés ({{ selectedTeachers.length }})</h3>
+          <div class="participants-list">
+            <span *ngFor="let teacherId of selectedTeachers" class="participant-tag">
+              {{ getTeacherName(teacherId) }}
+              <button class="remove-btn" (click)="toggleSelection('teacher', teacherId, $event)">
+                <i class="fas fa-times"></i>
+              </button>
+            </span>
+          </div>
+        </div>
+
+        <div class="communication-grid">
+          <div class="communication-card">
+            <h3><i class="fas fa-calendar-alt"></i> Réunions à venir</h3>
+            <div class="card-content">
+              <div *ngIf="meetings.length === 0" class="empty-state">
+                Aucune réunion prévue
+              </div>
+              <div *ngFor="let meeting of meetings" class="meeting-item">
+                <div class="meeting-header">
+                  <strong>{{ meeting.title }}</strong>
+                  <span class="meeting-date">{{ formatDateTime(meeting.date) }}</span>
+                </div>
+                <div class="meeting-details">
+                  <span class="meeting-room">{{ meeting.room }}</span>
+                  <p class="meeting-description">{{ meeting.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="communication-card">
+            <h3><i class="fas fa-umbrella-beach"></i> Demandes de congé</h3>
+            <div class="card-content">
+              <div *ngIf="conges.length === 0" class="empty-state">
+                Aucune demande de congé
+              </div>
+              <div *ngFor="let conge of conges" class="leave-item">
+                <div class="leave-header">
+                  <strong>{{ getTeacherName(conge.enseignantId) }}</strong>
+                  <span class="status-badge" [class.pending]="conge.statut === 'en_attente'"
+                        [class.approved]="conge.statut === 'approuve'"
+                        [class.rejected]="conge.statut === 'rejete'">
+                    {{ conge.statut === 'en_attente' ? 'En attente' : 
+                       conge.statut === 'approuve' ? 'Approuvé' : 'Rejeté' }}
+                  </span>
+                </div>
+                <div class="leave-details">
+                  <span class="leave-type">{{ conge.type }}</span>
+                  <span class="leave-dates">
+                    {{ formatDate(conge.dateDebut) }} - {{ formatDate(conge.dateFin) }}
+                  </span>
+                  <p class="leave-description">{{ conge.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Data Section -->
+    <div *ngIf="activeSection === 'data'" class="data-section">
+      <div class="section-header">
+        <h2>Données supplémentaires</h2>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="openModal('add-data')">
+            <i class="fas fa-plus"></i> Ajouter
+          </button>
+          <button class="btn btn-danger" (click)="deleteSelectedData()" [disabled]="selectedData.length === 0">
+            <i class="fas fa-trash"></i> Supprimer
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" [checked]="selectAllData" (change)="toggleSelectAll('data', $event)">
+              </th>
+              <th>ID</th>
+              <th>Titre</th>
+              <th>Valeur</th>
+              <th>Date</th>
+              <th>Catégorie</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let data of additionalDataList">
+              <td>
+                <input type="checkbox" [checked]="selectedData.includes(data.id)" 
+                       (change)="toggleSelection('data', data.id, $event)">
+              </td>
+              <td>{{ data.id }}</td>
+              <td>{{ data.title }}</td>
+              <td>{{ data.value }}</td>
+              <td>{{ formatDate(data.date) }}</td>
+              <td>
+                <span class="category-badge" [style.backgroundColor]="getCategoryColor(data.category)">
+                  {{ data.category }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn btn-sm btn-info" (click)="openModal('edit-data', data)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteData(data.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div *ngIf="activeSection === 'settings'" class="settings-section">
+      <h2>Paramètres du compte</h2>
+      
+      <form class="settings-form">
+        <div class="form-group">
+          <label>Nom d'utilisateur</label>
+          <input type="text" class="form-control" [(ngModel)]="settingsForm.username" name="username" readonly>
+        </div>
+        
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" class="form-control" [(ngModel)]="settingsForm.email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Mot de passe actuel</label>
+          <input type="password" class="form-control" [(ngModel)]="settingsForm.currentPassword" name="currentPassword">
+        </div>
+        
+        <div class="form-group">
+          <label>Nouveau mot de passe</label>
+          <input type="password" class="form-control" [(ngModel)]="settingsForm.newPassword" name="newPassword">
+        </div>
+        
+        <div class="form-group">
+          <label>Confirmer le mot de passe</label>
+          <input type="password" class="form-control" [(ngModel)]="settingsForm.confirmPassword" name="confirmPassword">
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" (click)="saveSettings()" [disabled]="isSaving">
+            <span *ngIf="!isSaving">Enregistrer</span>
+            <span *ngIf="isSaving">
+              <i class="fas fa-spinner fa-spin"></i> Enregistrement...
+            </span>
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="resetSettingsForm()">
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal -->
+    <div *ngIf="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <button class="close-btn" (click)="closeModal()">&times;</button>
+        
+        <!-- Add/Edit Student Modal -->
+        <div *ngIf="modalContent === 'add-student' || modalContent === 'edit-student'">
+          <h2>{{ modalContent === 'add-student' ? 'Ajouter un étudiant' : 'Modifier étudiant' }}</h2>
+          
+          <form class="modal-form">
+            <div class="form-group">
+              <label>Nom</label>
+              <input type="text" class="form-control" [(ngModel)]="studentForm.nom" name="nom" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Prénom</label>
+              <input type="text" class="form-control" [(ngModel)]="studentForm.prenom" name="prenom" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" class="form-control" [(ngModel)]="studentForm.email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Classe</label>
+              <input type="text" class="form-control" [(ngModel)]="studentForm.classe" name="classe">
+            </div>
+            
+            <div class="form-group">
+              <label>Date de naissance</label>
+              <input type="date" class="form-control" [(ngModel)]="studentForm.dateNaissance" name="dateNaissance">
+            </div>
+            
+            <div class="form-group">
+              <label>Statut</label>
+              <select class="form-control" [(ngModel)]="studentForm.status" name="status">
+                <option value="active">Actif</option>
+                <option value="locked">Verrouillé</option>
+              </select>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" (click)="saveStudent()" [disabled]="isSaving">
+                <span *ngIf="!isSaving">Enregistrer</span>
+                <span *ngIf="isSaving">
+                  <i class="fas fa-spinner fa-spin"></i> Enregistrement...
+                </span>
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Add/Edit Teacher Modal -->
+        <div *ngIf="modalContent === 'add-teacher' || modalContent === 'edit-teacher'">
+          <h2>{{ modalContent === 'add-teacher' ? 'Ajouter un enseignant' : 'Modifier enseignant' }}</h2>
+          
+          <form class="modal-form">
+            <div class="form-group">
+              <label>Nom</label>
+              <input type="text" class="form-control" [(ngModel)]="teacherForm.nom" name="nom" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Prénom</label>
+              <input type="text" class="form-control" [(ngModel)]="teacherForm.prenom" name="prenom" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" class="form-control" [(ngModel)]="teacherForm.email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Matières (séparées par des virgules)</label>
+              <input type="text" class="form-control" [(ngModel)]="teacherForm.matieres" name="matieres">
+            </div>
+            
+            <div class="form-group">
+              <label>Années d'expérience</label>
+              <input type="number" class="form-control" [(ngModel)]="teacherForm.nbAnneeExperience" name="nbAnneeExperience" min="0">
+            </div>
+            
+            <div class="form-group">
+              <label>Nombre de classes</label>
+              <input type="number" class="form-control" [(ngModel)]="teacherForm.nbClasse" name="nbClasse" min="0">
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" (click)="saveTeacher()" [disabled]="isSaving">
+                <span *ngIf="!isSaving">Enregistrer</span>
+                <span *ngIf="isSaving">
+                  <i class="fas fa-spinner fa-spin"></i> Enregistrement...
+                </span>
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Meeting Modal -->
+        <div *ngIf="modalContent === 'meeting'">
+          <h2>Planifier une réunion</h2>
+          <form class="modal-form">
+            <div class="form-group">
+              <label>Titre</label>
+              <input type="text" class="form-control" [(ngModel)]="meetingForm.title" name="title" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Date et heure</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="meetingForm.date" name="date" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Salle de réunion</label>
+              <select class="form-control" [(ngModel)]="meetingForm.room" name="room" required>
+                <option *ngFor="let room of meetingRooms" [value]="room">{{room}}</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Description</label>
+              <textarea class="form-control" [(ngModel)]="meetingForm.description" name="description" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label>Participants ({{ meetingForm.participants.length }})</label>
+              <div class="participants-list">
+                <span *ngFor="let teacherId of meetingForm.participants" class="participant-tag">
+                  {{ getTeacherName(teacherId) }}
+                  <button class="remove-btn" (click)="removeMeetingParticipant(teacherId)" [disabled]="isSaving">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
+            
+            <div class="notification-info">
+              <i class="fas fa-info-circle"></i>
+              Un email de notification sera envoyé à chaque participant
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" (click)="confirmMeeting()" [disabled]="isSaving">
+                <span *ngIf="!isSaving">
+                  <i class="fas fa-calendar-check"></i> Planifier
+                </span>
+                <span *ngIf="isSaving">
+                  <i class="fas fa-spinner fa-spin"></i> Envoi en cours...
+                </span>
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Conge Modal -->
+        <div *ngIf="modalContent === 'conge'">
+          <h2>Demander un congé</h2>
+          <form class="modal-form">
+            <div class="form-group">
+              <label>Type de congé</label>
+              <select class="form-control" [(ngModel)]="congeForm.type" name="type" required>
+                <option *ngFor="let type of typesConge" [value]="type">{{type}}</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>Date de début</label>
+              <input type="date" class="form-control" [(ngModel)]="congeForm.dateDebut" name="dateDebut" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Date de fin</label>
+              <input type="date" class="form-control" [(ngModel)]="congeForm.dateFin" name="dateFin" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Description</label>
+              <textarea class="form-control" [(ngModel)]="congeForm.description" name="description" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label>Enseignant</label>
+              <input type="text" class="form-control" [value]="getTeacherName(congeForm.enseignantId)" readonly>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" (click)="confirmConge()" [disabled]="isSaving">
+                <span *ngIf="!isSaving">Envoyer la demande</span>
+                <span *ngIf="isSaving">
+                  <i class="fas fa-spinner fa-spin"></i> Envoi en cours...
+                </span>
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </div>
+
+        
+    </div>
+  </div>
+</div>

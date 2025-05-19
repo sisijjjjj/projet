@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Educoline - Plateforme Éducative</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .btn-primary {
+      background-color: #9e6c0f;
+      border-color: #9e6c0f;
+    }
+
+    .btn-primary:hover {
+      background-color: #c07d0e;
+      border-color: #c07d0e;
+    }
+
+    .hero-section {
+      background-image: url('assets/img/home-background.jpg');
+      height: 90vh;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-shadow: 1px 1px 5px black;
+      text-align: center;
+    }
+
+    .role-section .card {
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .role-section .card:hover {
+      transform: translateY(-5px);
+    }
+
+    footer {
+      background-color: #222;
+      color: #fff;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="#">
+      <img src="assets/img/logo.png" alt="Educoline Logo" height="40">
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse"
+      data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+      aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item active"><a class="nav-link" routerLink="/">Accueil</a></li>
+        <li class="nav-item"><a class="nav-link" routerLink="/roles">Rôles</a></li>
+        <li class="nav-item"><a class="nav-link" routerLink="/features">Fonctionnalités</a></li>
+        <li class="nav-item"><a class="nav-link" routerLink="/contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <h1 class="display-4">Bienvenue sur Educoline</h1>
+      <p class="lead">Une plateforme complète pour la gestion éducative moderne</p>
+      <a href="#" class="btn btn-primary btn-lg">Commencer</a>
+    </div>
+  </section>
+
+  <!-- Rôles -->
+  <section id="roles" class="container my-5 role-section">
+    <h2 class="text-center mb-4">Accès par rôle</h2>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Admin</h5>
+            <p class="card-text">Gère les utilisateurs, les cours, les notifications et supervise toute la plateforme.</p>
+            <a routerLink="/admin" class="btn btn-primary">Espace Admin</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Enseignant</h5>
+            <p class="card-text">Crée des cours, suit les absences, évalue les étudiants et envoie des notifications.</p>
+            <a routerLink="/enseignant" class="btn btn-primary">Espace Enseignant</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h5 class="card-title">Étudiant</h5>
+            <p class="card-text">Consulte les cours, vérifie ses notes, signale les absences et reçoit les notifications.</p>
+            <a routerLink="/espace-etudiant" class="btn btn-primary">Espace Étudiant</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fonctionnalités -->
+  <section id="features" class="container my-5">
+    <h2 class="text-center mb-4">Fonctionnalités Clés</h2>
+    <div class="row">
+      <div class="col-md-3 mb-3">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h6 class="card-title">Gestion des Cours</h6>
+            <p class="card-text">Ajout, mise à jour et organisation des contenus pédagogiques.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h6 class="card-title">Suivi des Absences</h6>
+            <p class="card-text">Marquage des présences/absences et consultation de l’historique.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h6 class="card-title">Gestion des Notes</h6>
+            <p class="card-text">Saisie des résultats et génération des bulletins personnalisés.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <div class="card h-100 text-center">
+          <div class="card-body">
+            <h6 class="card-title">Système de Notifications</h6>
+            <p class="card-text">Alerte en temps réel des étudiants et enseignants via messagerie intégrée.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="container my-5">
+    <h2 class="text-center mb-4">Contactez-nous</h2>
+    <form>
+      <div class="form-group">
+        <label for="name">Nom complet</label>
+        <input type="text" class="form-control" id="name" placeholder="Votre nom complet" />
+      </div>
+      <div class="form-group">
+        <label for="email">Adresse email</label>
+        <input type="email" class="form-control" id="email" placeholder="nom@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea class="form-control" id="message" rows="4" placeholder="Votre message ici..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Envoyer</button>
+    </form>
+  </section>
+
+  <!-- Footer -->
+  <footer class="text-center py-4">
+    <p>&copy; 2025 Educoline - Tous droits réservés.</p>
+  </footer>
+
+  <!-- JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+
+</body>
+</html>

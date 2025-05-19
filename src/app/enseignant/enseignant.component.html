@@ -1,0 +1,230 @@
+<div class="container">
+  <!-- Vue principale de la liste des enseignants -->
+  <div *ngIf="!isDetailView">
+    <h2>Liste des Enseignants</h2>
+    
+    <div *ngIf="isLoading" class="loading">Chargement en cours...</div>
+    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+    
+    <table *ngIf="enseignants.length > 0" class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nom</th>
+          <th>Prénom</th>
+          <th>Email</th>
+          <th>Expérience</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let enseignant of enseignants">
+          <td>{{ enseignant.id }}</td>
+          <td>{{ enseignant.nom || enseignant.name || 'Non spécifié' }}</td>
+          <td>{{ enseignant.prenom || 'Non spécifié' }}</td>
+          <td>{{ enseignant.email || 'Non spécifié' }}</td>
+          <td>{{ enseignant.nbAnneeExperience || 0 }} ans</td>
+          <td>
+            <button (click)="afficherDetail(enseignant)" class="btn-details">
+              Détails
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div *ngIf="enseignants.length === 0 && !isLoading" class="no-data">
+      Aucun enseignant trouvé
+    </div>
+  </div>
+
+  <!-- Vue détaillée d'un enseignant -->
+  <div *ngIf="isDetailView" class="detail-view">
+    <h2>Détails de l'Enseignant</h2>
+    
+    <div class="teacher-info">
+      <div class="info-row">
+        <span class="label">Nom complet:</span>
+        <span>{{ selectedEnseignant.nom || selectedEnseignant.name }} {{ selectedEnseignant.prenom }}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Email:</span>
+        <span>{{ selectedEnseignant.email }}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Matière:</span>
+        <span>{{ selectedEnseignant.subject }}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Expérience:</span>
+        <span>{{ selectedEnseignant.nbAnneeExperience || 0 }} années</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Classes:</span>
+        <span>{{ selectedEnseignant.nbClasse || 0 }}</span>
+      </div>
+    </div>
+
+    <!-- Navigation entre sections -->
+    <div class="section-nav">
+      <button (click)="showNotes()" class="btn-nav">Gestion des Notes</button>
+      <button (click)="showAbsences()" class="btn-nav">Gestion des Absences</button>
+      <button (click)="showLeaveRequest()" class="btn-nav">Demandes de Congé</button>
+    </div>
+
+    <!-- Section Notes -->
+    <div *ngIf="showNotesSection" class="section">
+      <div *ngIf="selectedEnseignant.cours.length > 0; else noCourses">
+        <div *ngFor="let cours of selectedEnseignant.cours">
+          <h3>Gestion des Notes - {{ cours.name }}</h3>
+          
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Étudiant</th>
+                <th>TP</th>
+                <th>Examen</th>
+                <th>Moyenne</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let student of cours.students">
+                <td>{{ student.name }}</td>
+                <td>
+                  <input type="number" min="0" max="20" 
+                         [(ngModel)]="student.tp" 
+                         (change)="addTp(student, student.tp)">
+                </td>
+                <td>
+                  <input type="number" min="0" max="20" 
+                         [(ngModel)]="student.exam" 
+                         (change)="addExam(student, student.exam)">
+                </td>
+                <td>{{ calculateAverage(student.tp, student.exam) | number:'1.1-1' }}</td>
+                <td>
+                  <button (click)="removeStudentFromCourse(cours, student)" 
+                          class="btn-danger">
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <ng-template #noCourses>
+        <div class="no-data">Aucun cours disponible</div>
+      </ng-template>
+    </div>
+
+    <!-- Section Absences -->
+    <div *ngIf="showAbsenceSection" class="section">
+      <div *ngIf="selectedEnseignant.cours.length > 0; else noCoursesAbsence">
+        <div *ngFor="let cours of selectedEnseignant.cours">
+          <h3>Gestion des Absences - {{ cours.name }}</h3>
+          
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Étudiant</th>
+                <th>Absences</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let student of cours.students">
+                <td>{{ student.name }}</td>
+                <td>{{ student.absences || 0 }}</td>
+                <td>
+                  <button (click)="markPresent(student)" class="btn-success">Présent</button>
+                  <button (click)="markAbsent(student)" class="btn-danger">Absent</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <ng-template #noCoursesAbsence>
+        <div class="no-data">Aucun cours disponible</div>
+      </ng-template>
+    </div>
+
+    <!-- Section Demandes de Congé -->
+    <div *ngIf="showLeaveRequestSection" class="section">
+      <h3>Gestion des Congés</h3>
+      
+      <div class="leave-request-form">
+        <h4>Nouvelle Demande</h4>
+        <div class="form-group">
+          <label>Date de début:</label>
+          <input type="date" [(ngModel)]="newLeaveRequest.startDate" required>
+        </div>
+        <div class="form-group">
+          <label>Date de fin:</label>
+          <input type="date" [(ngModel)]="newLeaveRequest.endDate" required>
+        </div>
+        <div class="form-group">
+          <label>Motif:</label>
+          <textarea [(ngModel)]="newLeaveRequest.reason" required></textarea>
+        </div>
+        <button (click)="submitLeaveRequest()" 
+                class="btn-submit" 
+                [disabled]="!isLeaveRequestValid()">
+          Envoyer la demande
+        </button>
+      </div>
+
+      <div *ngIf="congeLoading" class="loading">Chargement des congés...</div>
+      <div *ngIf="congeError" class="error">{{ congeError }}</div>
+
+      <div class="leave-requests-list">
+        <h4>Historique des Demandes</h4>
+        
+        <div *ngIf="leaveRequests.length > 0; else noLeaveRequests">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Motif</th>
+                <th>Statut</th>
+                <th *ngIf="isAdminView()">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let request of leaveRequests" [class]="getStatusClass(request.status)">
+                <td>{{ request.startDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ request.endDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ request.reason }}</td>
+                <td>
+                  <span [ngClass]="getStatusClass(request.status)">{{ request.status }}</span>
+                </td>
+                <td *ngIf="isAdminView()">
+                  <button *ngIf="request.status === 'pending'" 
+                          (click)="updateLeaveRequestStatus(request.id, 'approved')"
+                          class="btn-success">
+                    Approuver
+                  </button>
+                  <button *ngIf="request.status === 'pending'" 
+                          (click)="updateLeaveRequestStatus(request.id, 'rejected')"
+                          class="btn-danger">
+                    Rejeter
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noLeaveRequests>
+          <div class="no-data">Aucune demande de congé trouvée</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button (click)="retourListe()" class="btn-back">Retour à la liste</button>
+      <button (click)="logout()" class="btn-logout">Déconnexion</button>
+    </div>
+  </div>
+</div>

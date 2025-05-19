@@ -1,0 +1,164 @@
+/* === Global Styles === */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+  
+  h1, h2, h5 {
+    font-weight: bold;
+  }
+  
+  a {
+    text-decoration: none;
+  }
+  
+  /* === Navbar === */
+  .navbar {
+    padding: 1rem;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbar-brand img {
+    max-height: 40px;
+  }
+  
+  .nav-link {
+    font-weight: 500;
+    color: #333 !important;
+  }
+  
+  .nav-link:hover {
+    color: #9e6c0f !important;
+  }
+  
+  /* === Hero Section === */
+  .hero-section {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100vh;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+  }
+  
+  .hero-section h1 {
+    font-size: 3rem;
+  }
+  
+  .hero-section p {
+    font-size: 1.2rem;
+  }
+  
+  .hero-section .btn-primary {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    background-color: #9e6c0f;
+    border: none;
+  }
+  
+  /* === Feature Cards Section === */
+  .two-column-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .card-container {
+    flex: 1;
+    margin-right: 20px;
+  }
+  
+  .card {
+    width: 100%;
+    background-color: #fff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  
+  .card-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .image-container {
+    flex: 1;
+    max-width: 400px;
+    padding-left: 20px;
+  }
+  
+  .image-container img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .two-column-section {
+      flex-direction: column;
+    }
+  
+    .card-container {
+      margin-right: 0;
+    }
+  
+    .image-container {
+      padding-left: 0;
+      margin-top: 20px;
+    }
+  }
+  
+  /* === Courses Section === */
+  #cours .card-img-top {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    max-height: 200px;
+    object-fit: cover;
+  }
+  
+  #cours .card-body {
+    text-align: center;
+  }
+  
+  #cours .btn {
+    background-color: #9e6c0f;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+  }
+  
+  /* === Contact Section === */
+  #contact form {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  #contact .form-control {
+    border-radius: 5px;
+    margin-bottom: 1rem;
+  }
+  
+  #contact button {
+    background-color: #9e6c0f;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+  }
+  
+  /* === Footer === */
+  footer {
+    background-color: #343a40;
+    color: #fff;
+    text-align: center;
+    padding: 1rem 0;
+  }
+  
