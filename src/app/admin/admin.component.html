@@ -1,0 +1,374 @@
+<div class="admin-container">
+  <!-- Navigation Tabs -->
+  <nav class="admin-nav">
+    <button (click)="selectTab('dashboard')" [class.active]="activeTab === 'dashboard'">Dashboard</button>
+    <button (click)="selectTab('etudiants')" [class.active]="activeTab === 'etudiants'">Étudiants</button>
+    <button (click)="selectTab('enseignants')" [class.active]="activeTab === 'enseignants'">Enseignants</button>
+    <button (click)="selectTab('classes')" [class.active]="activeTab === 'classes'">Classes</button>
+    <button (click)="selectTab('conges')" [class.active]="activeTab === 'conges'">Congés</button>
+    <button (click)="selectTab('reunions')" [class.active]="activeTab === 'reunions'">Réunions</button>
+  </nav>
+
+  <!-- Dashboard Tab -->
+  <div *ngIf="activeTab === 'dashboard'" class="tab-content">
+    <h2>Tableau de Bord Administrateur</h2>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Étudiants</h3>
+        <p>{{ etudiants.length }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Enseignants</h3>
+        <p>{{ enseignants.length }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Classes</h3>
+        <p>{{ classes.length }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Congés en attente</h3>
+        <p>{{ pendingConges.length }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Etudiants Tab -->
+  <div *ngIf="activeTab === 'etudiants'" class="tab-content">
+    <h2>Gestion des Étudiants</h2>
+    
+    <div class="two-column-layout">
+      <!-- List of Students -->
+      <div class="list-section">
+        <h3>Liste des Étudiants</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Email</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let etudiant of etudiants" (click)="selectEtudiant(etudiant)" [class.selected]="selectedEtudiant?.id === etudiant.id">
+              <td>{{ etudiant.id }}</td>
+              <td>{{ etudiant.nom }}</td>
+              <td>{{ etudiant.prenom }}</td>
+              <td>{{ etudiant.email }}</td>
+              <td>
+                <button (click)="deleteEtudiant(etudiant.id)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Student Details -->
+      <div class="details-section" *ngIf="selectedEtudiant">
+        <h3>Détails de l'Étudiant</h3>
+        <div class="form-group">
+          <label>Nom:</label>
+          <input [(ngModel)]="selectedEtudiant.nom">
+        </div>
+        <div class="form-group">
+          <label>Prénom:</label>
+          <input [(ngModel)]="selectedEtudiant.prenom">
+        </div>
+        <div class="form-group">
+          <label>Email:</label>
+          <input [(ngModel)]="selectedEtudiant.email">
+        </div>
+        <button (click)="updateEtudiant(selectedEtudiant.id, selectedEtudiant)">Mettre à jour</button>
+
+        <!-- Notes Section -->
+        <h4>Notes</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Cours</th>
+              <th>Note</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let note of notes">
+              <td>{{ note.cours?.nom }}</td>
+              <td>{{ note.valeur }}</td>
+              <td>
+                <button (click)="deleteNote(selectedEtudiant.id, note.id)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Add Note Form -->
+        <div class="form-group">
+          <label>Nouvelle Note:</label>
+          <input [(ngModel)]="newNote.valeur" placeholder="Valeur">
+          <button (click)="addNoteToEtudiant(selectedEtudiant.id, newNote)">Ajouter</button>
+        </div>
+
+        <!-- Absences Section -->
+        <h4>Absences</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Justifiée</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let absence of absences">
+              <td>{{ absence.date | date }}</td>
+              <td>{{ absence.justifiee ? 'Oui' : 'Non' }}</td>
+              <td>
+                <button *ngIf="!absence.justifiee" (click)="justifyAbsence(selectedEtudiant.id, absence.id)">Justifier</button>
+                <button (click)="deleteAbsence(selectedEtudiant.id, absence.id)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add Student Form -->
+    <div class="add-form">
+      <h3>Ajouter un Nouvel Étudiant</h3>
+      <div class="form-group">
+        <label>Nom:</label>
+        <input [(ngModel)]="newEtudiant.nom">
+      </div>
+      <div class="form-group">
+        <label>Prénom:</label>
+        <input [(ngModel)]="newEtudiant.prenom">
+      </div>
+      <div class="form-group">
+        <label>Email:</label>
+        <input [(ngModel)]="newEtudiant.email">
+      </div>
+      <button (click)="createEtudiant()">Créer</button>
+    </div>
+  </div>
+
+  <!-- Enseignants Tab -->
+  <div *ngIf="activeTab === 'enseignants'" class="tab-content">
+    <h2>Gestion des Enseignants</h2>
+    
+    <div class="two-column-layout">
+      <!-- List of Teachers -->
+      <div class="list-section">
+        <h3>Liste des Enseignants</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Email</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let enseignant of enseignants" (click)="selectEnseignant(enseignant)" [class.selected]="selectedEnseignant?.id === enseignant.id">
+              <td>{{ enseignant.id }}</td>
+              <td>{{ enseignant.nom }}</td>
+              <td>{{ enseignant.prenom }}</td>
+              <td>{{ enseignant.email }}</td>
+              <td>{{ enseignant.statutConge }}</td>
+              <td>
+                <button (click)="deleteEnseignant(enseignant.id)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Teacher Details -->
+      <div class="details-section" *ngIf="selectedEnseignant">
+        <h3>Détails de l'Enseignant</h3>
+        <div class="form-group">
+          <label>Nom:</label>
+          <input [(ngModel)]="selectedEnseignant.nom">
+        </div>
+        <div class="form-group">
+          <label>Prénom:</label>
+          <input [(ngModel)]="selectedEnseignant.prenom">
+        </div>
+        <div class="form-group">
+          <label>Email:</label>
+          <input [(ngModel)]="selectedEnseignant.email">
+        </div>
+        <button (click)="updateEnseignant(selectedEnseignant.id, selectedEnseignant)">Mettre à jour</button>
+      </div>
+    </div>
+
+    <!-- Add Teacher Form -->
+    <div class="add-form">
+      <h3>Ajouter un Nouvel Enseignant</h3>
+      <div class="form-group">
+        <label>Nom:</label>
+        <input [(ngModel)]="newEnseignant.nom">
+      </div>
+      <div class="form-group">
+        <label>Prénom:</label>
+        <input [(ngModel)]="newEnseignant.prenom">
+      </div>
+      <div class="form-group">
+        <label>Email:</label>
+        <input [(ngModel)]="newEnseignant.email">
+      </div>
+      <button (click)="createEnseignant()">Créer</button>
+    </div>
+  </div>
+
+  <!-- Classes Tab -->
+  <div *ngIf="activeTab === 'classes'" class="tab-content">
+    <h2>Gestion des Classes</h2>
+    
+    <div class="two-column-layout">
+      <!-- List of Classes -->
+      <div class="list-section">
+        <h3>Liste des Classes</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Niveau</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let classe of classes" (click)="selectClasse(classe)" [class.selected]="selectedClasse?.id === classe.id">
+              <td>{{ classe.id }}</td>
+              <td>{{ classe.nom }}</td>
+              <td>{{ classe.niveau }}</td>
+              <td>
+                <button (click)="deleteClasse(classe.id)">Supprimer</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Class Details -->
+      <div class="details-section" *ngIf="selectedClasse">
+        <h3>Détails de la Classe</h3>
+        <div class="form-group">
+          <label>Nom:</label>
+          <input [(ngModel)]="selectedClasse.nom">
+        </div>
+        <div class="form-group">
+          <label>Niveau:</label>
+          <input [(ngModel)]="selectedClasse.niveau">
+        </div>
+        <button (click)="updateClasse(selectedClasse.id, selectedClasse)">Mettre à jour</button>
+
+        <h4>Étudiants</h4>
+        <ul>
+          <li *ngFor="let etudiant of selectedClasse.etudiants">{{ etudiant.nom }} {{ etudiant.prenom }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Add Class Form -->
+    <div class="add-form">
+      <h3>Ajouter une Nouvelle Classe</h3>
+      <div class="form-group">
+        <label>Nom:</label>
+        <input [(ngModel)]="newClasse.nom">
+      </div>
+      <div class="form-group">
+        <label>Niveau:</label>
+        <input [(ngModel)]="newClasse.niveau">
+      </div>
+      <button (click)="createClasse()">Créer</button>
+    </div>
+  </div>
+
+  <!-- Conges Tab -->
+  <div *ngIf="activeTab === 'conges'" class="tab-content">
+    <h2>Gestion des Congés</h2>
+    
+    <h3>Demandes en Attente</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Enseignant</th>
+          <th>Type</th>
+          <th>Date Début</th>
+          <th>Date Fin</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let conge of pendingConges">
+          <td>{{ conge.enseignant?.nom }} {{ conge.enseignant?.prenom }}</td>
+          <td>{{ conge.type }}</td>
+          <td>{{ conge.dateDebut | date }}</td>
+          <td>{{ conge.dateFin | date }}</td>
+          <td>
+            <button (click)="approveConge(conge)">Approuver</button>
+            <button (click)="rejectConge(conge, 'Raison non spécifiée')">Rejeter</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Reunions Tab -->
+  <div *ngIf="activeTab === 'reunions'" class="tab-content">
+    <h2>Gestion des Réunions</h2>
+    
+    <div class="two-column-layout">
+      <!-- List of Meetings -->
+      <div class="list-section">
+        <h3>Liste des Réunions</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Enseignant</th>
+              <th>Sujet</th>
+              <th>Date/Heure</th>
+              <th>Lieu</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let reunion of reunions">
+              <td>{{ reunion.enseignant?.nom }} {{ reunion.enseignant?.prenom }}</td>
+              <td>{{ reunion.sujet }}</td>
+              <td>{{ reunion.dateHeure | date:'medium' }}</td>
+              <td>{{ reunion.lieu }}</td>
+              <td>
+                <button (click)="sendReunionEmail(reunion)">Envoyer Rappel</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add Meeting Form -->
+      <div class="details-section" *ngIf="selectedEnseignant">
+        <h3>Planifier une Réunion</h3>
+        <div class="form-group">
+          <label>Sujet:</label>
+          <input [(ngModel)]="newReunion.sujet">
+        </div>
+        <div class="form-group">
+          <label>Date/Heure:</label>
+          <input type="datetime-local" [(ngModel)]="newReunion.dateHeure">
+        </div>
+        <div class="form-group">
+          <label>Lieu:</label>
+          <input [(ngModel)]="newReunion.lieu">
+        </div>
+        <button (click)="createReunion()">Planifier</button>
+      </div>
+    </div>
+  </div>
+</div>

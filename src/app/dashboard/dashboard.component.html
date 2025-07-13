@@ -1,66 +1,77 @@
-<div class="dashboard-container">
-  <!-- Sidebar -->
+<div class="admin-dashboard">
+  <!-- Sidebar Navigation -->
   <div class="sidebar">
-    <div class="logo">
-      <h2>Venus</h2>
+    <div class="logo-section">
+      <h2>Tableau de bord</h2>
     </div>
+    
     <nav class="nav-menu">
       <ul>
         <li [class.active]="activeSection === 'dashboard'" (click)="showSection('dashboard')">
           <i class="fas fa-tachometer-alt"></i> Tableau de bord
         </li>
         <li [class.active]="activeSection === 'students'" (click)="showSection('students')">
-          <i class="fas fa-users"></i> Étudiants
+          <i class="fas fa-user-graduate"></i> Étudiants
         </li>
         <li [class.active]="activeSection === 'teachers'" (click)="showSection('teachers')">
           <i class="fas fa-chalkboard-teacher"></i> Enseignants
         </li>
-        <li [class.active]="activeSection === 'communication'" (click)="showSection('communication')">
-          <i class="fas fa-comments"></i> Communication
+        <li [class.active]="activeSection === 'classes'" (click)="showSection('classes')">
+          <i class="fas fa-school"></i> Classes
         </li>
-        <li [class.active]="activeSection === 'data'" (click)="showSection('data')">
-          <i class="fas fa-database"></i> Données supplémentaires
+        <li [class.active]="activeSection === 'meetings'" (click)="showSection('meetings')">
+          <i class="fas fa-users"></i> Réunions
         </li>
-        <li [class.active]="activeSection === 'settings'" (click)="showSection('settings')">
-          <i class="fas fa-cog"></i> Paramètres
+        <li [class.active]="activeSection === 'leaves'" (click)="showSection('leaves')">
+          <i class="fas fa-calendar-alt"></i> Congés
+        </li>
+        <li [class.active]="activeSection === 'notes'" (click)="showSection('notes')">
+          <i class="fas fa-clipboard-list"></i> Notes
         </li>
       </ul>
     </nav>
-  </div>
-
-  <!-- Main Content -->
-  <div class="main-content">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <h1>{{ 
-          activeSection === 'dashboard' ? 'Tableau de bord' : 
-          activeSection === 'students' ? 'Gestion des étudiants' : 
-          activeSection === 'teachers' ? 'Gestion des enseignants' : 
-          activeSection === 'communication' ? 'Communication' : 
-          activeSection === 'data' ? 'Données supplémentaires' :
-          'Paramètres' 
-        }}</h1>
-      </div>
-      <div class="header-right">
-        <button class="btn btn-refresh" (click)="refreshAll()">
-          <i class="fas fa-sync-alt"></i> Rafraîchir
-        </button>
-        <div class="user-profile">
-          <span>Admin</span>
-          <div class="avatar">
-            <i class="fas fa-user"></i>
-          </div>
+    
+    <div class="user-section">
+      <div class="user-info">
+        <div class="avatar">A</div>
+        <div class="user-details">
+          <span class="name">Administrateur</span>
+          <span class="role">Super Admin</span>
         </div>
       </div>
-    </header>
+      <button class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i> Déconnexion
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <div class="header">
+      <div class="header-left">
+        <h1>{{ getSectionTitle() }}</h1>
+        <button class="refresh-btn" (click)="refreshAll()" [disabled]="isRefreshing">
+          <i class="fas fa-sync-alt" [class.spin]="isRefreshing"></i> {{ isRefreshing ? 'Actualisation...' : 'Actualiser' }}
+        </button>
+      </div>
+      <div class="header-right">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Rechercher...">
+        </div>
+        <div class="notifications">
+          <i class="fas fa-bell"></i>
+          <span class="badge">3</span>
+        </div>
+      </div>
+    </div>
 
     <!-- Dashboard Section -->
     <div *ngIf="activeSection === 'dashboard'" class="dashboard-section">
       <!-- Stats Cards -->
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-icon" style="background-color: #4BC0C0;">
+          <div class="stat-icon" style="background-color: #4e73df;">
             <i class="fas fa-user-graduate"></i>
           </div>
           <div class="stat-info">
@@ -70,7 +81,7 @@
         </div>
         
         <div class="stat-card">
-          <div class="stat-icon" style="background-color: #FF6384;">
+          <div class="stat-icon" style="background-color: #1cc88a;">
             <i class="fas fa-chalkboard-teacher"></i>
           </div>
           <div class="stat-info">
@@ -80,7 +91,57 @@
         </div>
         
         <div class="stat-card">
-          <div class="stat-icon" style="background-color: #FFCE56;">
+          <div class="stat-icon" style="background-color: #36b9cc;">
+            <i class="fas fa-user-slash"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.inactiveStudents }}</h3>
+            <p>Comptes inactifs</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #f6c23e;">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.lateStudents }}</h3>
+            <p>Retards excessifs</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #e74a3b;">
+            <i class="fas fa-calendar-times"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.studentsWithExcessiveAbsences }}</h3>
+            <p>Absences excessives</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #858796;">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.totalMeetings }}</h3>
+            <p>Réunions</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #5a5c69;">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <div class="stat-info">
+            <h3>{{ stats.pendingLeaves }}</h3>
+            <p>Congés en attente</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon" style="background-color: #f8f9fc;">
             <i class="fas fa-lock"></i>
           </div>
           <div class="stat-info">
@@ -88,150 +149,125 @@
             <p>Comptes verrouillés</p>
           </div>
         </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon" style="background-color: #9966FF;">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="stat-info">
-            <h3>{{ stats.lateStudents }}</h3>
-            <p>Retards</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon" style="background-color: #36A2EB;">
-            <i class="fas fa-exclamation-triangle"></i>
-          </div>
-          <div class="stat-info">
-            <h3>{{ stats.studentsWithExcessiveAbsences }}</h3>
-            <p>Absences excessives</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon" style="background-color: #8AC24A;">
-            <i class="fas fa-database"></i>
-          </div>
-          <div class="stat-info">
-            <h3>{{ stats.totalAdditionalData }}</h3>
-            <p>Données supplémentaires</p>
-          </div>
-        </div>
       </div>
 
-      <!-- Charts -->
-      <div class="charts-grid">
-        <div class="chart-container">
-          <canvas #activityChart></canvas>
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-container white-bg">
+          <h4>Activité des étudiants</h4>
+          <canvas #activityChart id="activityChart"></canvas>
         </div>
-        <div class="chart-container">
-          <canvas #classChart></canvas>
-        </div>
-        <div class="chart-container">
-          <canvas #absenceChart></canvas>
-        </div>
-        <div class="chart-container">
-          <canvas #statusChart></canvas>
-        </div>
-        <div class="chart-container">
-          <canvas #dataChart></canvas>
+        <div class="chart-container white-bg">
+          <h4>Répartition par classe</h4>
+          <canvas #classChart id="classChart"></canvas>
         </div>
       </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <button class="btn btn-primary" (click)="refreshChartData()">
-          <i class="fas fa-sync-alt"></i> Actualiser les graphiques
-        </button>
-        <button class="btn btn-warning" (click)="checkAbsencesAndSendAlerts()">
-          <i class="fas fa-bell"></i> Vérifier les absences
-        </button>
+      
+      <div class="charts-row">
+        <div class="chart-container white-bg">
+          <h4>Taux d'absence par mois</h4>
+          <canvas #absenceChart id="absenceChart"></canvas>
+        </div>
+        <div class="chart-container white-bg">
+          <h4>Statut des étudiants</h4>
+          <canvas #statusChart id="statusChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="full-width-chart">
+        <div class="chart-container white-bg">
+          <h4>Performance des classes</h4>
+          <canvas #performanceChart id="performanceChart"></canvas>
+        </div>
       </div>
     </div>
 
-    <!-- Students Section -->
-    <div *ngIf="activeSection === 'students'" class="students-section">
+    <!-- Students Management Section -->
+    <div *ngIf="activeSection === 'students'" class="management-section">
       <div class="section-header">
         <h2>Gestion des étudiants</h2>
-        <div class="actions">
+        <div class="action-buttons">
           <button class="btn btn-primary" (click)="openModal('add-student')">
             <i class="fas fa-plus"></i> Ajouter
           </button>
+          <button class="btn btn-secondary" (click)="lockSelectedStudents()" [disabled]="selectedStudents.length === 0">
+            <i class="fas fa-lock"></i> Verrouiller
+          </button>
           <button class="btn btn-success" (click)="unlockSelectedStudents()" [disabled]="selectedStudents.length === 0">
             <i class="fas fa-unlock"></i> Déverrouiller
-          </button>
-          <button class="btn btn-warning" (click)="lockSelectedStudents()" [disabled]="selectedStudents.length === 0">
-            <i class="fas fa-lock"></i> Verrouiller
           </button>
           <button class="btn btn-danger" (click)="deleteSelectedStudents()" [disabled]="selectedStudents.length === 0">
             <i class="fas fa-trash"></i> Supprimer
           </button>
         </div>
       </div>
-
+      
       <div class="table-responsive">
-        <table class="table">
+        <table class="data-table">
           <thead>
             <tr>
               <th>
                 <input type="checkbox" [checked]="selectAllStudents" (change)="toggleSelectAll('students', $event)">
               </th>
-              <th>ID</th>
               <th>Nom</th>
               <th>Prénom</th>
               <th>Email</th>
               <th>Classe</th>
+              <th>Moyenne</th>
               <th>Absences</th>
               <th>Statut</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let student of students" [class.locked]="student.status === 'locked'">
+            <tr *ngFor="let student of students" [class.inactive]="student.status === 'INACTIF'">
               <td>
                 <input type="checkbox" [checked]="selectedStudents.includes(student.id)" 
                        (change)="toggleSelection('student', student.id, $event)">
               </td>
-              <td>{{ student.id }}</td>
               <td>{{ student.nom }}</td>
               <td>{{ student.prenom }}</td>
               <td>{{ student.email }}</td>
-              <td>{{ student.classe || 'Non assigné' }}</td>
+              <td>{{ getClassName(student) }}</td>
+              <td>{{ getStudentAverage(student.id) || '-' }}</td>
               <td>
-                <span [class.warning]="(student.absences || 0) >= 3">
-                  {{ student.absences || 0 }}
+                <span [class.text-danger]="getStudentUnjustifiedAbsencesCount(student.id) > 3">
+                  {{ getStudentAbsencesCount(student.id) }} ({{ getStudentUnjustifiedAbsencesCount(student.id) }} non justifiées)
                 </span>
               </td>
               <td>
-                <span class="status-badge" [class.active]="student.status === 'active'" 
-                      [class.locked]="student.status === 'locked'">
-                  {{ student.status === 'active' ? 'Actif' : 'Verrouillé' }}
+                <span class="badge" [class.bg-success]="student.status === 'ACTIF'" 
+                      [class.bg-danger]="student.status === 'INACTIF'" 
+                      [class.bg-secondary]="student.status === 'DIPLOME'">
+                  {{ getStatusLabel(student.status) }}
                 </span>
               </td>
               <td class="actions">
                 <button class="btn btn-sm btn-info" (click)="openModal('edit-student', student)">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-warning" (click)="toggleStudentLockStatus(student.id)">
-                  <i class="fas" [class.fa-lock]="student.status === 'active'" 
-                     [class.fa-unlock]="student.status === 'locked'"></i>
+                <button class="btn btn-sm btn-warning" (click)="toggleStudentStatus(student.id)">
+                  <i class="fas" [class.fa-toggle-on]="student.status === 'ACTIF'" 
+                     [class.fa-toggle-off]="student.status !== 'ACTIF'"></i>
                 </button>
                 <button class="btn btn-sm btn-danger" (click)="deleteStudent(student.id)">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
             </tr>
+            <tr *ngIf="students.length === 0">
+              <td colspan="9" class="text-center">Aucun étudiant trouvé</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Teachers Section -->
-    <div *ngIf="activeSection === 'teachers'" class="teachers-section">
+    <!-- Teachers Management Section -->
+    <div *ngIf="activeSection === 'teachers'" class="management-section">
       <div class="section-header">
         <h2>Gestion des enseignants</h2>
-        <div class="actions">
+        <div class="action-buttons">
           <button class="btn btn-primary" (click)="openModal('add-teacher')">
             <i class="fas fa-plus"></i> Ajouter
           </button>
@@ -240,446 +276,814 @@
           </button>
         </div>
       </div>
-
+      
       <div class="table-responsive">
-        <table class="table">
+        <table class="data-table">
           <thead>
             <tr>
               <th>
                 <input type="checkbox" [checked]="selectAllTeachers" (change)="toggleSelectAll('teachers', $event)">
               </th>
-              <th>ID</th>
               <th>Nom</th>
               <th>Prénom</th>
               <th>Email</th>
               <th>Matières</th>
-              <th>Expérience</th>
+              <th>Classe</th>
+              <th>Statut</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let teacher of teachers">
+            <tr *ngFor="let teacher of teachers" [class.inactive]="teacher.status === 'INACTIVE'">
               <td>
                 <input type="checkbox" [checked]="selectedTeachers.includes(teacher.id)" 
                        (change)="toggleSelection('teacher', teacher.id, $event)">
               </td>
-              <td>{{ teacher.id }}</td>
               <td>{{ teacher.nom }}</td>
               <td>{{ teacher.prenom }}</td>
               <td>{{ teacher.email }}</td>
               <td>
-                <span *ngIf="teacher.matieres && teacher.matieres.length > 0">
-                  {{ teacher.matieres.join(', ') }}
+                <span *ngIf="teacher.matieresEnseignees && teacher.matieresEnseignees.length > 0">
+                  {{ teacher.matieresEnseignees.join(', ') }}
                 </span>
-                <span *ngIf="!teacher.matieres || teacher.matieres.length === 0">
-                  Non spécifié
+                <span *ngIf="!teacher.matieresEnseignees || teacher.matieresEnseignees.length === 0">-</span>
+              </td>
+              <td>{{ getTeacherClassNamesDisplay(teacher) }}</td>
+              <td>
+                <span class="badge" [class.bg-success]="teacher.status === 'ACTIVE'" 
+                      [class.bg-danger]="teacher.status === 'INACTIVE'">
+                  {{ getStatusLabel(teacher.status) }}
                 </span>
               </td>
-              <td>{{ teacher.nbAnneeExperience }} ans</td>
               <td class="actions">
                 <button class="btn btn-sm btn-info" (click)="openModal('edit-teacher', teacher)">
                   <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-warning" (click)="toggleTeacherStatus(teacher.id)">
+                  <i class="fas" [class.fa-toggle-on]="teacher.status === 'ACTIVE'" 
+                     [class.fa-toggle-off]="teacher.status !== 'ACTIVE'"></i>
                 </button>
                 <button class="btn btn-sm btn-danger" (click)="deleteTeacher(teacher.id)">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
             </tr>
+            <tr *ngIf="teachers.length === 0">
+              <td colspan="8" class="text-center">Aucun enseignant trouvé</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Communication Section -->
-    <div *ngIf="activeSection === 'communication'" class="communication-section">
+    <!-- Classes Management Section -->
+    <div *ngIf="activeSection === 'classes'" class="management-section">
       <div class="section-header">
-        <h2>Communication</h2>
-        <div class="actions">
-          <button class="btn btn-primary" (click)="openModal('meeting')" [disabled]="selectedTeachers.length === 0">
-            <i class="fas fa-calendar-alt"></i> Planifier réunion
-          </button>
-          <button class="btn btn-success" (click)="openModal('conge')" [disabled]="selectedTeachers.length !== 1">
-            <i class="fas fa-umbrella-beach"></i> Demander congé
-          </button>
-        </div>
-      </div>
-
-      <div class="communication-content">
-        <div class="selected-participants" *ngIf="selectedTeachers.length > 0">
-          <h3>Participants sélectionnés ({{ selectedTeachers.length }})</h3>
-          <div class="participants-list">
-            <span *ngFor="let teacherId of selectedTeachers" class="participant-tag">
-              {{ getTeacherName(teacherId) }}
-              <button class="remove-btn" (click)="toggleSelection('teacher', teacherId, $event)">
-                <i class="fas fa-times"></i>
-              </button>
-            </span>
-          </div>
-        </div>
-
-        <div class="communication-grid">
-          <div class="communication-card">
-            <h3><i class="fas fa-calendar-alt"></i> Réunions à venir</h3>
-            <div class="card-content">
-              <div *ngIf="meetings.length === 0" class="empty-state">
-                Aucune réunion prévue
-              </div>
-              <div *ngFor="let meeting of meetings" class="meeting-item">
-                <div class="meeting-header">
-                  <strong>{{ meeting.title }}</strong>
-                  <span class="meeting-date">{{ formatDateTime(meeting.date) }}</span>
-                </div>
-                <div class="meeting-details">
-                  <span class="meeting-room">{{ meeting.room }}</span>
-                  <p class="meeting-description">{{ meeting.description }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="communication-card">
-            <h3><i class="fas fa-umbrella-beach"></i> Demandes de congé</h3>
-            <div class="card-content">
-              <div *ngIf="conges.length === 0" class="empty-state">
-                Aucune demande de congé
-              </div>
-              <div *ngFor="let conge of conges" class="leave-item">
-                <div class="leave-header">
-                  <strong>{{ getTeacherName(conge.enseignantId) }}</strong>
-                  <span class="status-badge" [class.pending]="conge.statut === 'en_attente'"
-                        [class.approved]="conge.statut === 'approuve'"
-                        [class.rejected]="conge.statut === 'rejete'">
-                    {{ conge.statut === 'en_attente' ? 'En attente' : 
-                       conge.statut === 'approuve' ? 'Approuvé' : 'Rejeté' }}
-                  </span>
-                </div>
-                <div class="leave-details">
-                  <span class="leave-type">{{ conge.type }}</span>
-                  <span class="leave-dates">
-                    {{ formatDate(conge.dateDebut) }} - {{ formatDate(conge.dateFin) }}
-                  </span>
-                  <p class="leave-description">{{ conge.description }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional Data Section -->
-    <div *ngIf="activeSection === 'data'" class="data-section">
-      <div class="section-header">
-        <h2>Données supplémentaires</h2>
-        <div class="actions">
-          <button class="btn btn-primary" (click)="openModal('add-data')">
+        <h2>Gestion des classes</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" (click)="openModal('add-class')">
             <i class="fas fa-plus"></i> Ajouter
           </button>
-          <button class="btn btn-danger" (click)="deleteSelectedData()" [disabled]="selectedData.length === 0">
-            <i class="fas fa-trash"></i> Supprimer
-          </button>
         </div>
       </div>
-
+      
       <div class="table-responsive">
-        <table class="table">
+        <table class="data-table">
           <thead>
             <tr>
-              <th>
-                <input type="checkbox" [checked]="selectAllData" (change)="toggleSelectAll('data', $event)">
-              </th>
-              <th>ID</th>
-              <th>Titre</th>
-              <th>Valeur</th>
-              <th>Date</th>
-              <th>Catégorie</th>
+              <th>Nom</th>
+              <th>Niveau</th>
+              <th>Étudiants</th>
+              <th>Enseignants</th>
+              <th>Moyenne</th>
+              <th>Absences</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let data of additionalDataList">
-              <td>
-                <input type="checkbox" [checked]="selectedData.includes(data.id)" 
-                       (change)="toggleSelection('data', data.id, $event)">
-              </td>
-              <td>{{ data.id }}</td>
-              <td>{{ data.title }}</td>
-              <td>{{ data.value }}</td>
-              <td>{{ formatDate(data.date) }}</td>
-              <td>
-                <span class="category-badge" [style.backgroundColor]="getCategoryColor(data.category)">
-                  {{ data.category }}
-                </span>
-              </td>
+            <tr *ngFor="let classe of classes">
+              <td>{{ classe.nom }}</td>
+              <td>{{ classe.niveau }}</td>
+              <td>{{ getClassStudentCount(classe.id) }}</td>
+              <td>{{ classe.enseignantsNoms || 'Aucun' }}</td>
+              <td>{{ classe.moyenneClasse !== undefined ? (classe.moyenneClasse | number:'1.2-2') : 'N/A' }}</td>
+              <td>{{ getClassAbsencesCount(classe.id) }}</td>
               <td class="actions">
-                <button class="btn btn-sm btn-info" (click)="openModal('edit-data', data)">
+                <button class="btn btn-sm btn-info" (click)="openModal('edit-class', classe)">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" (click)="deleteData(data.id)">
+                <button class="btn btn-sm btn-danger" (click)="deleteClass(classe.id)">
                   <i class="fas fa-trash"></i>
                 </button>
               </td>
+            </tr>
+            <tr *ngIf="classes.length === 0">
+              <td colspan="7" class="text-center">Aucune classe trouvée</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Settings Section -->
-    <div *ngIf="activeSection === 'settings'" class="settings-section">
-      <h2>Paramètres du compte</h2>
+    <!-- Meetings Management Section -->
+    <div *ngIf="activeSection === 'meetings'" class="management-section">
+      <div class="section-header">
+        <h2>Gestion des réunions</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" (click)="openModal('add-meeting')">
+            <i class="fas fa-plus"></i> Ajouter
+          </button>
+          <button class="btn btn-danger" (click)="deleteSelectedMeetings()" [disabled]="selectedMeetings.length === 0">
+            <i class="fas fa-trash"></i> Supprimer
+          </button>
+        </div>
+      </div>
       
-      <form class="settings-form">
-        <div class="form-group">
-          <label>Nom d'utilisateur</label>
-          <input type="text" class="form-control" [(ngModel)]="settingsForm.username" name="username" readonly>
-        </div>
-        
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" class="form-control" [(ngModel)]="settingsForm.email" name="email" required>
-        </div>
-        
-        <div class="form-group">
-          <label>Mot de passe actuel</label>
-          <input type="password" class="form-control" [(ngModel)]="settingsForm.currentPassword" name="currentPassword">
-        </div>
-        
-        <div class="form-group">
-          <label>Nouveau mot de passe</label>
-          <input type="password" class="form-control" [(ngModel)]="settingsForm.newPassword" name="newPassword">
-        </div>
-        
-        <div class="form-group">
-          <label>Confirmer le mot de passe</label>
-          <input type="password" class="form-control" [(ngModel)]="settingsForm.confirmPassword" name="confirmPassword">
-        </div>
-        
-        <div class="form-actions">
-          <button type="button" class="btn btn-primary" (click)="saveSettings()" [disabled]="isSaving">
-            <span *ngIf="!isSaving">Enregistrer</span>
-            <span *ngIf="isSaving">
-              <i class="fas fa-spinner fa-spin"></i> Enregistrement...
-            </span>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" [checked]="selectAllMeetings" (change)="toggleSelectAll('meetings', $event)">
+              </th>
+              <th>Sujet</th>
+              <th>Date/Heure</th>
+              <th>Lieu</th>
+              <th>Enseignant</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let meeting of meetings">
+              <td>
+                <input type="checkbox" [checked]="selectedMeetings.includes(meeting.id)" 
+                       (change)="toggleSelection('meeting', meeting.id, $event)">
+              </td>
+              <td>{{ meeting.sujet }}</td>
+              <td>{{ formatDateTime(meeting.dateHeure) }}</td>
+              <td>{{ meeting.lieu }}</td>
+              <td>{{ meeting.enseignant ? getTeacherName(meeting.enseignant.id) : 'Non assigné' }}</td>
+              <td>
+                <span class="badge" [class.bg-info]="meeting.statut === 'PLANNED'" 
+                      [class.bg-success]="meeting.statut === 'COMPLETED'" 
+                      [class.bg-danger]="meeting.statut === 'CANCELLED'">
+                  {{ getStatusLabel(meeting.statut) }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn btn-sm btn-info" (click)="openModal('edit-meeting', meeting)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteMeeting(meeting.id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="meetings.length === 0">
+              <td colspan="7" class="text-center">Aucune réunion trouvée</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Leaves Management Section -->
+    <div *ngIf="activeSection === 'leaves'" class="management-section">
+      <div class="section-header">
+        <h2>Gestion des congés</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" (click)="openModal('add-leave')" [disabled]="selectedTeachers.length !== 1">
+            <i class="fas fa-plus"></i> Demander un congé
           </button>
-          <button type="button" class="btn btn-secondary" (click)="resetSettingsForm()">
-            Annuler
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Demandeur</th>
+              <th>Type</th>
+              <th>Date début</th>
+              <th>Date fin</th>
+              <th>Motif</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let leave of leaves">
+              <td>{{ getRequesterName(leave) }}</td>
+              <td>{{ getLeaveTypeLabel(leave.type) }}</td>
+              <td>{{ formatDate(leave.dateDebut) }}</td>
+              <td>{{ formatDate(leave.dateFin) }}</td>
+              <td>{{ leave.motif || '-' }}</td>
+              <td>
+                <span class="badge" [class.bg-warning]="leave.statut === 'EN_ATTENTE'" 
+                      [class.bg-success]="leave.statut === 'APPROUVE'" 
+                      [class.bg-danger]="leave.statut === 'REJETE'">
+                  {{ getStatusLabel(leave.statut) }}
+                </span>
+              </td>
+              <td class="actions">
+                <button *ngIf="leave.statut === 'EN_ATTENTE'" class="btn btn-sm btn-success" 
+                        (click)="approveLeave(leave.id)" [disabled]="isProcessing">
+                  <i class="fas fa-check"></i> Approuver
+                </button>
+                <button *ngIf="leave.statut === 'EN_ATTENTE'" class="btn btn-sm btn-danger" 
+                        (click)="openRejectDialog(leave.id)" [disabled]="isProcessing">
+                  <i class="fas fa-times"></i> Rejeter
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="leaves.length === 0">
+              <td colspan="7" class="text-center">Aucun congé trouvé</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Notes Management Section -->
+    <div *ngIf="activeSection === 'notes'" class="management-section">
+      <div class="section-header">
+        <h2>Gestion des notes</h2>
+        <div class="action-buttons">
+          <button class="btn btn-primary" (click)="openModal('add-note')" [disabled]="selectedStudents.length !== 1">
+            <i class="fas fa-plus"></i> Ajouter une note
           </button>
         </div>
-      </form>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Étudiant</th>
+              <th>Matière</th>
+              <th>Note TP</th>
+              <th>Note Examen</th>
+              <th>Moyenne</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let note of notes">
+              <td>{{ note.etudiantId ? getStudentName(note.etudiantId) : 'Non défini' }}</td>
+              <td>{{ note.coursId ? getCourseName(note.coursId) : 'Non défini' }}</td>
+              <td>{{ note.tp }}</td>
+              <td>{{ note.exam }}</td>
+              <td>{{ note.moyenne }}</td>
+              <td>{{ formatDate(note.date) }}</td>
+              <td>{{ getNoteTypeLabel(note.type) }}</td>
+              <td class="actions">
+                <button class="btn btn-sm btn-danger" (click)="note.id ? deleteNoteById(note.id) : null">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="notes.length === 0">
+              <td colspan="8" class="text-center">Aucune note trouvée</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Modal -->
-    <div *ngIf="showModal" class="modal-overlay">
-      <div class="modal-content">
+    <div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()"></div>
+    <div class="modal" *ngIf="showModal" [class.show]="showModal">
+      <div class="modal-header">
+        <h3>{{ getModalTitle() }}</h3>
         <button class="close-btn" (click)="closeModal()">&times;</button>
-        
-        <!-- Add/Edit Student Modal -->
-        <div *ngIf="modalContent === 'add-student' || modalContent === 'edit-student'">
-          <h2>{{ modalContent === 'add-student' ? 'Ajouter un étudiant' : 'Modifier étudiant' }}</h2>
-          
-          <form class="modal-form">
-            <div class="form-group">
+      </div>
+      
+      <div class="modal-body white-bg">
+        <!-- Student Form -->
+        <form *ngIf="modalContent === 'add-student' || modalContent === 'edit-student'" (submit)="saveForm()" class="compact-form">
+          <div class="form-row">
+            <div class="form-group half-width">
               <label>Nom</label>
               <input type="text" class="form-control" [(ngModel)]="studentForm.nom" name="nom" required>
             </div>
             
-            <div class="form-group">
+            <div class="form-group half-width">
               <label>Prénom</label>
               <input type="text" class="form-control" [(ngModel)]="studentForm.prenom" name="prenom" required>
             </div>
-            
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" class="form-control" [(ngModel)]="studentForm.email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-              <label>Classe</label>
-              <input type="text" class="form-control" [(ngModel)]="studentForm.classe" name="classe">
-            </div>
-            
-            <div class="form-group">
+          </div>
+          
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="form-control" [(ngModel)]="studentForm.email" name="email" required>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
               <label>Date de naissance</label>
-              <input type="date" class="form-control" [(ngModel)]="studentForm.dateNaissance" name="dateNaissance">
+              <input type="date" class="form-control" [(ngModel)]="studentForm.dateNaissance" name="dateNaissance" required>
             </div>
             
-            <div class="form-group">
-              <label>Statut</label>
-              <select class="form-control" [(ngModel)]="studentForm.status" name="status">
-                <option value="active">Actif</option>
-                <option value="locked">Verrouillé</option>
+            <div class="form-group half-width">
+              <label>Classe</label>
+              <select class="form-control" [(ngModel)]="studentForm.classeId" name="classeId">
+                <option value="">Sélectionner une classe</option>
+                <option *ngFor="let classe of classes" [value]="classe.id">{{ classe.nom }} ({{ classe.niveau }})</option>
               </select>
             </div>
-            
-            <div class="form-actions">
-              <button type="button" class="btn btn-primary" (click)="saveStudent()" [disabled]="isSaving">
-                <span *ngIf="!isSaving">Enregistrer</span>
-                <span *ngIf="isSaving">
-                  <i class="fas fa-spinner fa-spin"></i> Enregistrement...
-                </span>
-              </button>
-              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
-                Annuler
-              </button>
-            </div>
-          </form>
-        </div>
-        
-        <!-- Add/Edit Teacher Modal -->
-        <div *ngIf="modalContent === 'add-teacher' || modalContent === 'edit-teacher'">
-          <h2>{{ modalContent === 'add-teacher' ? 'Ajouter un enseignant' : 'Modifier enseignant' }}</h2>
+          </div>
           
-          <form class="modal-form">
-            <div class="form-group">
+          <div class="form-group">
+            <label>Statut</label>
+            <select class="form-control" [(ngModel)]="studentForm.status" name="status">
+              <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
+            </select>
+          </div>
+          
+          <div *ngIf="!studentForm.id" class="form-row">
+            <div class="form-group half-width">
+              <label>Mot de passe</label>
+              <input type="password" class="form-control" [(ngModel)]="studentForm.password" name="password" required>
+            </div>
+            
+            <div class="form-group half-width">
+              <label>Confirmation</label>
+              <input type="password" class="form-control" [(ngModel)]="studentForm.passwordConfirm" name="passwordConfirm" required>
+            </div>
+          </div>
+        </form>
+        
+        <!-- Teacher Form -->
+        <form *ngIf="modalContent === 'add-teacher' || modalContent === 'edit-teacher'" (submit)="saveForm()" class="compact-form">
+          <div class="form-row">
+            <div class="form-group half-width">
               <label>Nom</label>
               <input type="text" class="form-control" [(ngModel)]="teacherForm.nom" name="nom" required>
             </div>
             
-            <div class="form-group">
+            <div class="form-group half-width">
               <label>Prénom</label>
               <input type="text" class="form-control" [(ngModel)]="teacherForm.prenom" name="prenom" required>
             </div>
-            
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" class="form-control" [(ngModel)]="teacherForm.email" name="email" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="form-control" [(ngModel)]="teacherForm.email" name="email" required>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Date de naissance</label>
+              <input type="date" class="form-control" [(ngModel)]="teacherForm.dateNaissance" name="dateNaissance" required>
             </div>
             
-            <div class="form-group">
-              <label>Matières (séparées par des virgules)</label>
-              <input type="text" class="form-control" [(ngModel)]="teacherForm.matieres" name="matieres">
-            </div>
-            
-            <div class="form-group">
+            <div class="form-group half-width">
               <label>Années d'expérience</label>
               <input type="number" class="form-control" [(ngModel)]="teacherForm.nbAnneeExperience" name="nbAnneeExperience" min="0">
             </div>
-            
-            <div class="form-group">
-              <label>Nombre de classes</label>
-              <input type="number" class="form-control" [(ngModel)]="teacherForm.nbClasse" name="nbClasse" min="0">
-            </div>
-            
-            <div class="form-actions">
-              <button type="button" class="btn btn-primary" (click)="saveTeacher()" [disabled]="isSaving">
-                <span *ngIf="!isSaving">Enregistrer</span>
-                <span *ngIf="isSaving">
-                  <i class="fas fa-spinner fa-spin"></i> Enregistrement...
-                </span>
-              </button>
-              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
-                Annuler
-              </button>
-            </div>
-          </form>
-        </div>
-        
-        <!-- Meeting Modal -->
-        <div *ngIf="modalContent === 'meeting'">
-          <h2>Planifier une réunion</h2>
-          <form class="modal-form">
-            <div class="form-group">
-              <label>Titre</label>
-              <input type="text" class="form-control" [(ngModel)]="meetingForm.title" name="title" required>
-            </div>
-            
-            <div class="form-group">
-              <label>Date et heure</label>
-              <input type="datetime-local" class="form-control" [(ngModel)]="meetingForm.date" name="date" required>
-            </div>
-            
-            <div class="form-group">
-              <label>Salle de réunion</label>
-              <select class="form-control" [(ngModel)]="meetingForm.room" name="room" required>
-                <option *ngFor="let room of meetingRooms" [value]="room">{{room}}</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label>Description</label>
-              <textarea class="form-control" [(ngModel)]="meetingForm.description" name="description" rows="3"></textarea>
-            </div>
-            
-            <div class="form-group">
-              <label>Participants ({{ meetingForm.participants.length }})</label>
-              <div class="participants-list">
-                <span *ngFor="let teacherId of meetingForm.participants" class="participant-tag">
-                  {{ getTeacherName(teacherId) }}
-                  <button class="remove-btn" (click)="removeMeetingParticipant(teacherId)" [disabled]="isSaving">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </span>
+          </div>
+          
+          <div class="form-group">
+            <label>Statut</label>
+            <select class="form-control" [(ngModel)]="teacherForm.status" name="status">
+              <option *ngFor="let status of teacherStatusOptions" [value]="status.value">{{ status.label }}</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Matières enseignées</label>
+            <div class="subjects-grid">
+              <div *ngFor="let subject of subjects" class="subject-item">
+                <input type="checkbox" [id]="'subject-'+subject" 
+                       [checked]="teacherForm.matieresEnseignees?.includes(subject)"
+                       (change)="toggleTeacherSubject(subject)">
+                <label [for]="'subject-'+subject">{{ subject }}</label>
               </div>
             </div>
-            
-            <div class="notification-info">
-              <i class="fas fa-info-circle"></i>
-              Un email de notification sera envoyé à chaque participant
+          </div>
+          
+          <div *ngIf="!teacherForm.id" class="form-row">
+            <div class="form-group half-width">
+              <label>Mot de passe</label>
+              <input type="password" class="form-control" [(ngModel)]="teacherForm.password" name="password" required>
             </div>
             
-            <div class="form-actions">
-              <button type="button" class="btn btn-primary" (click)="confirmMeeting()" [disabled]="isSaving">
-                <span *ngIf="!isSaving">
-                  <i class="fas fa-calendar-check"></i> Planifier
-                </span>
-                <span *ngIf="isSaving">
-                  <i class="fas fa-spinner fa-spin"></i> Envoi en cours...
-                </span>
-              </button>
-              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
-                Annuler
-              </button>
+            <div class="form-group half-width">
+              <label>Confirmation</label>
+              <input type="password" class="form-control" [(ngModel)]="teacherForm.passwordConfirm" name="passwordConfirm" required>
             </div>
-          </form>
+          </div>
+        </form>
+        <!-- Class Form -->
+<form (ngSubmit)="saveClass()">
+  <div class="form-row">
+    <div class="form-group half-width">
+      <label for="className">Nom de la classe *</label>
+      <input type="text" id="className" class="form-control" 
+             [(ngModel)]="classForm.nom" name="nom" 
+             placeholder="Ex: 3ème A" required>
+      <small class="form-text text-muted">Doit être unique</small>
+    </div>
+    
+    <div class="form-group half-width">
+      <label for="classLevel">Niveau *</label>
+      <select id="classLevel" class="form-control" 
+              [(ngModel)]="classForm.niveau" name="niveau" required>
+        <option value="" disabled selected>Sélectionner un niveau</option>
+        <option *ngFor="let level of classLevels" [value]="level">{{ level }}</option>
+      </select>
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <label>Enseignants assignés</label>
+    <div class="teachers-selection-container">
+      <div class="available-teachers">
+        <div class="search-box">
+          <input type="text" placeholder="Rechercher un enseignant..." 
+                 (input)="filterTeachers($event)">
         </div>
+        <div class="teachers-list">
+          <div *ngFor="let teacher of filteredTeachers" class="teacher-item">
+            <label>
+              <input type="checkbox" 
+                     [checked]="isTeacherSelected(teacher.id)"
+                     (change)="toggleTeacherSelection(teacher.id)">
+              {{ teacher.prenom }} {{ teacher.nom }}
+              <span class="teacher-subjects" *ngIf="teacher.matieresEnseignees && teacher.matieresEnseignees.length > 0">
+                ({{ teacher.matieresEnseignees.join(', ') }})
+              </span>
+            </label>
+          </div>
+          <div *ngIf="filteredTeachers.length === 0" class="no-results">
+            Aucun enseignant trouvé
+          </div>
+        </div>
+      </div>
+      
+      <div class="selected-teachers" *ngIf="classForm.enseignantIds && classForm.enseignantIds.length > 0">
+        <h5>Enseignants sélectionnés ({{ classForm.enseignantIds.length }})</h5>
+        <ul>
+          <li *ngFor="let teacherId of classForm.enseignantIds">
+            {{ getTeacherName(teacherId) }}
+            <button type="button" class="remove-btn" 
+                    (click)="removeTeacher(teacherId)">
+              ×
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn-secondary" 
+            (click)="closeModal()">Annuler</button>
+    <button type="submit" class="btn btn-primary" 
+            [disabled]="isProcessing || !classForm.nom || !classForm.niveau">
+      <span *ngIf="!isProcessing">{{ modalContent === 'add-class' ? 'Créer' : 'Enregistrer' }}</span>
+      <span *ngIf="isProcessing" class="spinner-border spinner-border-sm"></span>
+    </button>
+  </div>
+</form>
         
-        <!-- Conge Modal -->
-        <div *ngIf="modalContent === 'conge'">
-          <h2>Demander un congé</h2>
-          <form class="modal-form">
-            <div class="form-group">
-              <label>Type de congé</label>
-              <select class="form-control" [(ngModel)]="congeForm.type" name="type" required>
-                <option *ngFor="let type of typesConge" [value]="type">{{type}}</option>
+        <!-- Meeting Form -->
+        <form *ngIf="modalContent === 'add-meeting' || modalContent === 'edit-meeting'" (submit)="saveForm()" class="compact-form">
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Sujet</label>
+              <input type="text" class="form-control" [(ngModel)]="meetingForm.sujet" name="sujet" required>
+            </div>
+            
+            <div class="form-group half-width">
+              <label>Date/Heure</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="meetingForm.dateHeure" name="dateHeure" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Lieu</label>
+              <select class="form-control" [(ngModel)]="meetingForm.lieu" name="lieu" required>
+                <option *ngFor="let room of meetingRooms" [value]="room">{{ room }}</option>
               </select>
             </div>
             
-            <div class="form-group">
-              <label>Date de début</label>
-              <input type="date" class="form-control" [(ngModel)]="congeForm.dateDebut" name="dateDebut" required>
+            <div class="form-group half-width">
+              <label>Enseignant</label>
+              <select class="form-control" [(ngModel)]="meetingForm.enseignant" name="enseignant" required>
+                <option value="">Sélectionner un enseignant</option>
+                <option *ngFor="let teacher of teachers" [ngValue]="teacher">
+                  {{ teacher.prenom }} {{ teacher.nom }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-control" [(ngModel)]="meetingForm.description" name="description" rows="3"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Statut</label>
+              <select class="form-control" [(ngModel)]="meetingForm.statut" name="statut">
+                <option *ngFor="let status of meetingStatusOptions" [value]="status.value">{{ status.label }}</option>
+              </select>
             </div>
             
-            <div class="form-group">
-              <label>Date de fin</label>
-              <input type="date" class="form-control" [(ngModel)]="congeForm.dateFin" name="dateFin" required>
+            <div class="form-group half-width checkbox-group">
+              <input type="checkbox" class="form-check-input" id="sendEmail" [(ngModel)]="meetingForm.sendEmail" name="sendEmail">
+              <label class="form-check-label" for="sendEmail">Envoyer une notification</label>
+            </div>
+          </div>
+        </form>
+        
+        <!-- Leave Form -->
+        <form *ngIf="modalContent === 'add-leave'" (submit)="saveForm()" class="compact-form">
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Type de congé</label>
+              <select class="form-control" [(ngModel)]="leaveForm.type" name="type" required>
+                <option *ngFor="let type of leaveTypes" [value]="type.value">{{ type.label }}</option>
+              </select>
             </div>
             
-            <div class="form-group">
-              <label>Description</label>
-              <textarea class="form-control" [(ngModel)]="congeForm.description" name="description" rows="3"></textarea>
+            <div class="form-group half-width">
+              <label>Demandeur</label>
+              <select class="form-control" [(ngModel)]="leaveForm.demandeurType" name="demandeurType" required>
+                <option value="ENSEIGNANT">Enseignant</option>
+                <option value="ETUDIANT">Étudiant</option>
+              </select>
             </div>
-            
+          </div>
+          
+          <div class="form-row" *ngIf="leaveForm.demandeurType === 'ENSEIGNANT'">
             <div class="form-group">
               <label>Enseignant</label>
-              <input type="text" class="form-control" [value]="getTeacherName(congeForm.enseignantId)" readonly>
+              <select class="form-control" [(ngModel)]="leaveForm.enseignant" name="enseignant" required>
+                <option *ngFor="let teacher of teachers" [ngValue]="teacher">
+                  {{ teacher.prenom }} {{ teacher.nom }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row" *ngIf="leaveForm.demandeurType === 'ETUDIANT'">
+            <div class="form-group">
+              <label>Étudiant</label>
+              <select class="form-control" [(ngModel)]="leaveForm.etudiant" name="etudiant" required>
+                <option *ngFor="let student of students" [ngValue]="student">
+                  {{ student.prenom }} {{ student.nom }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Date de début</label>
+              <input type="date" class="form-control" [(ngModel)]="leaveForm.dateDebut" name="dateDebut" required>
             </div>
             
-            <div class="form-actions">
-              <button type="button" class="btn btn-primary" (click)="confirmConge()" [disabled]="isSaving">
-                <span *ngIf="!isSaving">Envoyer la demande</span>
-                <span *ngIf="isSaving">
-                  <i class="fas fa-spinner fa-spin"></i> Envoi en cours...
-                </span>
-              </button>
-              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">
-                Annuler
-              </button>
+            <div class="form-group half-width">
+              <label>Date de fin</label>
+              <input type="date" class="form-control" [(ngModel)]="leaveForm.dateFin" name="dateFin" required>
             </div>
-          </form>
-        </div>
-
+          </div>
+          
+          <div class="form-group">
+            <label>Motif</label>
+            <textarea class="form-control" [(ngModel)]="leaveForm.motif" name="motif" rows="3" required></textarea>
+          </div>
+        </form>
         
+        <!-- Note Form -->
+        <form *ngIf="modalContent === 'add-note'" (submit)="saveForm()" class="compact-form">
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Étudiant</label>
+              <select class="form-control" [(ngModel)]="noteForm.etudiantId" name="etudiantId" required>
+                <option *ngFor="let student of students" [value]="student.id">
+                  {{ student.prenom }} {{ student.nom }} ({{ getClassName(student) }})
+                </option>
+              </select>
+            </div>
+            
+            <div class="form-group half-width">
+              <label>Matière</label>
+              <select class="form-control" [(ngModel)]="noteForm.coursId" name="coursId" required>
+                <option *ngFor="let course of courses" [value]="course.id">
+                  {{ course.nom }} ({{ course.enseignant?.prenom }} {{ course.enseignant?.nom }})
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Note TP</label>
+              <input type="number" class="form-control" [(ngModel)]="noteForm.tp" name="tp" min="0" max="20" step="0.5" required>
+            </div>
+            
+            <div class="form-group half-width">
+              <label>Note Examen</label>
+              <input type="number" class="form-control" [(ngModel)]="noteForm.exam" name="exam" min="0" max="20" step="0.5" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Type</label>
+              <select class="form-control" [(ngModel)]="noteForm.type" name="type">
+                <option *ngFor="let type of noteTypes" [value]="type.value">{{ type.label }}</option>
+              </select>
+            </div>
+            
+            <div class="form-group half-width">
+              <label>Date</label>
+              <input type="date" class="form-control" [(ngModel)]="noteForm.date" name="date" required>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer white-bg">
+        <button class="btn btn-secondary" (click)="closeModal()" [disabled]="isProcessing">Annuler</button>
+        <button class="btn btn-primary" (click)="saveForm()" [disabled]="isProcessing">
+          <span *ngIf="isProcessing"><i class="fas fa-spinner fa-spin"></i> Traitement...</span>
+          <span *ngIf="!isProcessing">Enregistrer</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
+
+<style>
+  /* Styles pour les formulaires compacts */
+  .compact-form {
+    padding: 15px;
+    background: white;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .compact-form .form-group {
+    margin-bottom: 10px;
+  }
+
+  .compact-form .half-width {
+    width: 48%;
+    display: inline-block;
+    margin-right: 2%;
+    vertical-align: top;
+  }
+
+  .compact-form .form-row {
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .compact-form label {
+    font-size: 0.9em;
+    margin-bottom: 3px;
+    display: block;
+    color: #555;
+    font-weight: 500;
+  }
+
+  .compact-form .form-control {
+    padding: 6px 10px;
+    font-size: 0.9em;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+  }
+
+  .compact-form .subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 5px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+  }
+
+  .compact-form .subject-item {
+    font-size: 0.8em;
+    display: flex;
+    align-items: center;
+  }
+
+  .compact-form .subject-item input {
+    margin-right: 5px;
+  }
+
+  .white-bg {
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  /* Styles pour la modal */
+  .modal {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-body {
+    padding: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #777;
+  }
+
+  /* Styles généraux */
+  .btn {
+    padding: 8px 15px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background-color: #4e73df;
+    color: white;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .btn-danger {
+    background-color: #e74a3b;
+    color: white;
+  }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8em;
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .checkbox-group input {
+    margin-right: 8px;
+  }
+
+  textarea.form-control {
+    min-height: 80px;
+    resize: vertical;
+  }
+
+  select[multiple].form-control {
+    height: auto;
+    min-height: 100px;
+  }
+</style>

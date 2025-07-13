@@ -1,167 +1,159 @@
-<div class="container">
-  <header>
-    <div class="header-content">
-      <h1>Espace Étudiant</h1>
-      <div class="student-info">
-        <span>Connecté en tant que: <strong>{{currentStudent}}</strong></span>
-        <button (click)="logout()" class="logout-btn">Déconnexion</button>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5>Sélectionner un étudiant</h5>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="studentSelect">Étudiant</label>
+            <select 
+              id="studentSelect" 
+              class="form-control" 
+              (change)="onStudentSelect($event)"
+              [disabled]="isLoading"
+            >
+              <option value="">-- Sélectionner --</option>
+              <option *ngFor="let etudiant of etudiants" [value]="etudiant.id">
+                {{ etudiant.prenom }} {{ etudiant.nom }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3" *ngIf="currentStudent">
+        <div class="card-header">
+          <h5>Mes Cours</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            <li 
+              *ngFor="let cours of coursList" 
+              class="list-group-item list-group-item-action"
+              [class.active]="selectedCourse?.id === cours.id"
+              (click)="selectCourse(cours)"
+            >
+              {{ cours.nom }}
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
-  </header>
 
-  <main>
-    <section class="courses-section">
-      <h2>Mes Cours</h2>
-      <div class="courses-grid">
-        <div *ngFor="let course of courses" class="course-card">
-          <img [src]="course.image" [alt]="course.name + ' image'">
-          <div class="course-info">
-            <h3>{{course.name}}</h3>
-            <p>Enseignant: {{course.instructor}}</p>
-            <div class="course-stats">
-              <span>TP: {{getStudentNotes(course.notes)?.tp || '-'}}</span>
-              <span>Exam: {{getStudentNotes(course.notes)?.exam || '-'}}</span>
-              <span [class.critical]="hasCriticalAbsences(course.notes)">
-                Abs: {{getStudentNotes(course.notes)?.absences || '0'}}
-              </span>
+    <div class="col-md-8" *ngIf="currentStudent && selectedCourse">
+      <div class="card">
+        <div class="card-header">
+          <h5>{{ selectedCourse.nom }}</h5>
+          <small class="text-muted">Enseignant: {{ getEnseignantName() }}</small>
+        </div>
+        <div class="card-body">
+          <p>{{ selectedCourse.description }}</p>
+
+          <div class="mt-4">
+            <h6>Notes</h6>
+            <div *ngIf="getNotesForCourse(selectedCourse.id).length > 0; else noNotes">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Valeur</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let note of getNotesForCourse(selectedCourse.id)">
+                    <td>{{ note.type }}</td>
+                    <td>{{ note.valeur }}/20</td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th>Moyenne</th>
+                    <th>{{ calculateCourseAverage(selectedCourse.id) || 'N/A' }}/20</th>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
+            <ng-template #noNotes>
+              <div class="alert alert-info">Aucune note disponible pour ce cours</div>
+            </ng-template>
           </div>
-          <div class="course-actions">
-            <button (click)="showContent(course, 'course')" 
-                    [class.active]="isActive(course, 'course')">
-              <i class="fas fa-book"></i> Contenu
-            </button>
-            <button (click)="showContent(course, 'notes')" 
-                    [class.active]="isActive(course, 'notes')">
-              <i class="fas fa-chart-bar"></i> Notes
-            </button>
-            <button (click)="showContent(course, 'contact')" 
-                    [class.active]="isActive(course, 'contact')">
-              <i class="fas fa-envelope"></i> Contact
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <section *ngIf="selectedCourse" class="details-section">
-
-      <!-- Section Contenu du Cours -->
-      <div *ngIf="isActive(selectedCourse, 'course')" 
-           [id]="getSectionId(selectedCourse.name, 'course')" 
-           class="content-details">
-        <h2>{{selectedCourse.courseContent.title}}</h2>
-        <div class="content-grid">
-          <div class="chapters-box">
-            <h3><i class="fas fa-list-ol"></i> Chapitres</h3>
-            <ul>
-              <li *ngFor="let chapter of selectedCourse.courseContent.chapters">
-                <i class="fas fa-chevron-right"></i> {{chapter}}
-              </li>
-            </ul>
-          </div>
-          <div class="resources-box">
-            <h3><i class="fas fa-book-open"></i> Ressources</h3>
-            <ul>
-              <li *ngFor="let resource of selectedCourse.courseContent.resources">
-                <i class="fas fa-file-alt"></i> {{resource}}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section Notes -->
-      <div *ngIf="isActive(selectedCourse, 'notes')" 
-           [id]="getSectionId(selectedCourse.name, 'notes')" 
-           class="notes-details">
-        <h2>Notes - {{selectedCourse.name}}</h2>
-        <div class="notes-summary">
-          <div class="note-card">
-            <h3>TP</h3>
-            <p class="note-value">{{getStudentNotes(selectedCourse.notes)?.tp || '-'}}</p>
-          </div>
-          <div class="note-card">
-            <h3>Examen</h3>
-            <p class="note-value">{{getStudentNotes(selectedCourse.notes)?.exam || '-'}}</p>
-          </div>
-          <div class="note-card" [class.critical]="hasCriticalAbsences(selectedCourse.notes)">
-            <h3>Absences</h3>
-            <p class="note-value">{{getStudentNotes(selectedCourse.notes)?.absences || '0'}}</p>
-          </div>
-        </div>
-        
-        <h3>Notes de la classe</h3>
-        <div class="class-notes">
-          <table>
-            <thead>
-              <tr>
-                <th>Étudiant</th>
-                <th>TP</th>
-                <th>Examen</th>
-                <th>Absences</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let note of selectedCourse.notes" 
-                  [class.highlight]="note.student === currentStudent"
-                  [class.critical]="note.absences > 3">
-                <td>{{note.student}}</td>
-                <td>{{note.tp}}</td>
-                <td>{{note.exam}}</td>
-                <td>{{note.absences}}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Section Contact -->
-      <div *ngIf="isActive(selectedCourse, 'contact')" 
-           [id]="getSectionId(selectedCourse.name, 'contact')" 
-           class="contact-details">
-        <h2>Contacter {{selectedCourse.instructor}}</h2>
-        <p class="contact-info">
-          <i class="fas fa-info-circle"></i> 
-          Votre message sera envoyé à: {{selectedCourse.instructorEmail}}
-        </p>
-        
-        <div *ngIf="emailSent" class="alert alert-success">
-          <i class="fas fa-check-circle"></i>
-          Message envoyé avec succès à {{selectedCourse.instructor}}.
-        </div>
-        
-        <div *ngIf="emailError" class="alert alert-danger">
-          <i class="fas fa-exclamation-circle"></i>
-          Veuillez remplir tous les champs correctement.
-        </div>
-        
-        <form [formGroup]="emailForm" (ngSubmit)="sendEmail()">
-          <div class="form-group">
-            <label for="subject"><i class="fas fa-tag"></i> Sujet</label>
-            <input type="text" id="subject" formControlName="subject" class="form-control" 
-                  placeholder="Objet de votre message">
-            <div *ngIf="emailForm.get('subject')?.invalid && emailForm.get('subject')?.touched" 
-                class="error-message">
-              <i class="fas fa-exclamation-triangle"></i> Ce champ est requis
+          <div class="mt-4">
+            <h6>Absences</h6>
+            <div *ngIf="getAbsencesForCourse(selectedCourse.id).length > 0; else noAbsences">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th>Motif</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let absence of getAbsencesForCourse(selectedCourse.id)"
+                      [class.table-warning]="!absence.justifiee">
+                    <td>{{ absence.date | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                      <span [class.text-success]="absence.justifiee" [class.text-danger]="!absence.justifiee">
+                        {{ absence.justifiee ? 'Justifiée' : 'Non justifiée' }}
+                      </span>
+                    </td>
+                    <td>{{ absence.motif || 'Non spécifié' }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-          
-          <div class="form-group">
-            <label for="message"><i class="fas fa-comment-alt"></i> Message</label>
-            <textarea id="message" formControlName="message" rows="5" class="form-control"
-                      placeholder="Détaillez votre question..."></textarea>
-            <div *ngIf="emailForm.get('message')?.invalid && emailForm.get('message')?.touched" 
-                class="error-message">
-              <i class="fas fa-exclamation-triangle"></i> Le message doit contenir au moins 10 caractères
-            </div>
+            <ng-template #noAbsences>
+              <div class="alert alert-info">Aucune absence enregistrée pour ce cours</div>
+            </ng-template>
           </div>
 
-          <button type="submit" class="submit-btn" [disabled]="emailForm.invalid">
-            <i class="fas fa-paper-plane"></i> Envoyer le message
-          </button>
-        </form>
+          <div class="mt-4">
+            <h6>Contacter l'enseignant</h6>
+            <form [formGroup]="emailForm" (ngSubmit)="sendEmail()">
+              <div class="form-group">
+                <label>Email de l'enseignant</label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  formControlName="teacherEmail" 
+                  [value]="getEnseignantEmail()"
+                  readonly
+                >
+              </div>
+              <div class="form-group">
+                <label>Sujet (optionnel)</label>
+                <input type="text" class="form-control" formControlName="subject">
+              </div>
+              <div class="form-group">
+                <label>Message</label>
+                <textarea class="form-control" formControlName="message" rows="4"></textarea>
+              </div>
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="emailForm.invalid || isLoading"
+              >
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm"></span>
+                Envoyer
+              </button>
+              <div *ngIf="emailSuccess" class="alert alert-success mt-2">
+                Email envoyé avec succès!
+              </div>
+              <div *ngIf="emailError" class="alert alert-danger mt-2">
+                {{ emailError }}
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
-    </section>
-  </main>
+    </div>
+
+    <div *ngIf="isLoading" class="col-12 text-center mt-4">
+      <div class="spinner-border text-primary"></div>
+      <p>Chargement en cours...</p>
+    </div>
+  </div>
 </div>

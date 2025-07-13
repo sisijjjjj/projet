@@ -1,32 +1,55 @@
 import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
+interface Etudiant {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  classe?: Classe;
+}
+
+interface Classe {
+  id: number;
+  nom: string;
+  niveau: string;
+}
+
+interface Cours {
+  id: number;
+  nom: string;
+  description: string;
+  enseignant?: Enseignant;
+}
+
+interface Enseignant {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+}
 
 interface Note {
-  student: string;
-  courseName: string;
-  tp: number | null;
-  exam: number | null;
-  absences: number;
+  id: number;
+  valeur: number;
+  type: string;
+  cours: Cours;
 }
 
-interface CourseContent {
-  title: string;
-  chapters: string[];
-  resources: string[];
+interface Absence {
+  id: number;
+  date: string;
+  justifiee: boolean;
+  motif?: string;
+  cours: Cours;
 }
 
-interface Course {
-  name: string;
-  instructor: string;
-  instructorEmail: string;
-  image?: string;
-  notes: Note[];
-  courseContent: CourseContent;
-}
-
-interface EmailPayload {
+interface EmailRequest {
   teacherEmail: string;
-  subject: string;
+  subject?: string;
   message: string;
 }
 
@@ -36,130 +59,186 @@ interface EmailPayload {
   styleUrls: ['./espace-etudiant.component.css']
 })
 export class EspaceEtudiantComponent implements OnInit {
-  activeSection: { id: string; type: 'course' | 'notes' | 'contact' } | null = null;
-  selectedCourse: Course | null = null;
+  private readonly API_URL = 'http://localhost:8081/api/etudiants';
+  
+  etudiants: Etudiant[] = [];
+  currentStudent: Etudiant | null = null;
+  coursList: Cours[] = [];
+  notesList: Note[] = [];
+  absencesList: Absence[] = [];
+  allCoursList: Cours[] = [];
+  selectedCourse: Cours | null = null;
+  
   emailForm: FormGroup;
-  emailSent = false;
-  emailError = false;
-
-  currentStudent = 'Sirine Mimouni';  // Étudiant courant fictif (à modifier selon connexion)
-
-  allNotes: Note[] = [];
-  courses: Course[] = [];
+  emailSuccess = false;
+  emailError: string | null = null;
+  isLoading = false;
 
   constructor(
-    private fb: FormBuilder,
+    private http: HttpClient,
+    private fb: FormBuilder
   ) {
     this.emailForm = this.fb.group({
-      subject: ['', Validators.required],
+      teacherEmail: ['', [Validators.required, Validators.email]],
+      subject: ['', Validators.maxLength(100)],
       message: ['', [Validators.required, Validators.minLength(10)]]
     });
   }
 
   ngOnInit(): void {
-    this.loadFakeCoursesAndNotes();
+    this.loadAllStudents();
   }
 
-  loadFakeCoursesAndNotes(): void {
-    // Données de cours avec notes des étudiants
-    this.courses = [
-      {
-        name: 'Mathématiques',
-        instructor: 'Mme Dupont',
-        instructorEmail: 'dupont@example.com',
-        image: 'https://via.placeholder.com/150',
-        courseContent: {
-          title: 'Introduction aux mathématiques',
-          chapters: ['Algèbre', 'Analyse', 'Géométrie'],
-          resources: ['Chapitre1.pdf', 'Exercices.docx']
-        },
-        notes: [
-          { student: 'John Doe', courseName: 'Mathématiques', tp: 12, exam: 15, absences: 2 },
-          { student: 'Sirine Mimouni', courseName: 'Mathématiques', tp: 14, exam: 13, absences: 1 },
-          { student: 'Jean Dupont', courseName: 'Mathématiques', tp: 10, exam: 14, absences: 0 },
-        ]
+  loadAllStudents(): void {
+    this.isLoading = true;
+    this.http.get<Etudiant[]>(this.API_URL).pipe(
+      catchError(err => {
+        console.error('Error loading students:', err);
+        return of([]);
+      })
+    ).subscribe({
+      next: (etudiants) => {
+        this.etudiants = etudiants;
+        this.isLoading = false;
       },
-      {
-        name: 'Physique',
-        instructor: 'M. Martin',
-        instructorEmail: 'martin@example.com',
-        image: 'https://via.placeholder.com/150',
-        courseContent: {
-          title: 'Bases de la physique',
-          chapters: ['Mécanique', 'Thermodynamique', 'Optique'],
-          resources: ['Physique_Chap1.pdf', 'TP_Physique.docx']
-        },
-        notes: [
-          { student: 'John Doe', courseName: 'Physique', tp: 11, exam: 16, absences: 1 },
-          { student: 'Sirine Mimouni', courseName: 'Physique', tp: 13, exam: 15, absences: 3 },
-          { student: 'Jean Dupont', courseName: 'Physique', tp: 12, exam: 14, absences: 0 },
-        ]
+      error: (err) => {
+        this.handleError('Erreur lors du chargement des étudiants', err);
+        this.isLoading = false;
       }
-    ];
-
-    // Liste à plat des notes pour traitement
-    this.allNotes = this.courses.flatMap(course => course.notes);
-    this.injectNotesIntoCourses();
-  }
-
-  injectNotesIntoCourses(): void {
-    this.courses.forEach(course => {
-      course.notes = this.allNotes.filter(note =>
-        note.courseName?.toLowerCase() === course.name.toLowerCase()
-      );
     });
   }
 
-  showContent(course: Course, type: 'course' | 'notes' | 'contact'): void {
-    this.selectedCourse = course;
-    this.activeSection = { id: this.getSectionId(course.name, type), type };
+  onStudentSelect(event: Event): void {
+    const selectElement = event.target as HTMLSelectElement;
+    const etudiantId = selectElement.value;
+    
+    if (!etudiantId) {
+      this.currentStudent = null;
+      return;
+    }
 
-    setTimeout(() => {
-      const element = document.getElementById(this.activeSection?.id ?? '');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.isLoading = true;
+    this.currentStudent = this.etudiants.find(e => e.id === +etudiantId) || null;
+    
+    if (!this.currentStudent) {
+      this.isLoading = false;
+      return;
+    }
+
+    forkJoin({
+      cours: this.http.get<Cours[]>(`${this.API_URL}/${etudiantId}/cours`).pipe(
+        catchError(err => {
+          console.error('Error loading courses:', err);
+          return of([]);
+        })
+      ),
+      notes: this.http.get<Note[]>(`${this.API_URL}/${etudiantId}/notes`).pipe(
+        catchError(err => {
+          console.error('Error loading notes:', err);
+          return of([]);
+        })
+      ),
+      absences: this.http.get<Absence[]>(`${this.API_URL}/${etudiantId}/absences`).pipe(
+        catchError(err => {
+          console.error('Error loading absences:', err);
+          return of([]);
+        })
+      ),
+      allCours: this.http.get<Cours[]>(`${this.API_URL}/all/cours`).pipe(
+        catchError(err => {
+          console.error('Error loading all courses:', err);
+          return of([]);
+        })
+      )
+    }).subscribe({
+      next: ({cours, notes, absences, allCours}) => {
+        this.coursList = cours;
+        this.notesList = notes;
+        this.absencesList = absences;
+        this.allCoursList = allCours;
+        this.selectedCourse = cours.length > 0 ? cours[0] : null;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.handleError('Erreur lors du chargement des données étudiant', err);
+        this.isLoading = false;
       }
-    }, 100);
+    });
   }
 
-  getSectionId(courseName: string, type: 'course' | 'notes' | 'contact'): string {
-    const baseId = courseName.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // supprime accents
-      .replace(/\s+/g, '-');
-    return type === 'course' ? baseId : `${type}-${baseId}`;
+  selectCourse(cours: Cours): void {
+    this.selectedCourse = cours;
   }
 
-  isActive(course: Course, type: 'course' | 'notes' | 'contact'): boolean {
-    return this.activeSection?.id === this.getSectionId(course.name, type) &&
-           this.selectedCourse?.name === course.name;
+  getEnseignantName(): string {
+    if (!this.selectedCourse?.enseignant) {
+      return 'Enseignant non spécifié';
+    }
+    return `${this.selectedCourse.enseignant.prenom} ${this.selectedCourse.enseignant.nom}`;
   }
 
-  getStudentNotes(notes: Note[]): Note | null {
-    if (!notes) return null;
-    return notes.find(note => note.student === this.currentStudent) ?? null;
-  }
-
-  hasCriticalAbsences(notes: Note[]): boolean {
-    const note = this.getStudentNotes(notes);
-    return note ? note.absences > 3 : false;
+  getEnseignantEmail(): string {
+    return this.selectedCourse?.enseignant?.email || '';
   }
 
   sendEmail(): void {
-    if (this.emailForm.valid && this.selectedCourse) {
-      // Simule envoi d'email réussi
-      this.emailSent = true;
-      this.emailError = false;
-      this.emailForm.reset();
-
-      setTimeout(() => this.emailSent = false, 5000);
-    } else {
-      this.emailError = true;
+    if (this.emailForm.invalid || !this.currentStudent || !this.selectedCourse) {
+      return;
     }
+
+    const teacherEmail = this.getEnseignantEmail();
+    if (!teacherEmail) {
+      this.emailError = 'Email enseignant non disponible';
+      return;
+    }
+
+    this.isLoading = true;
+    this.emailError = null;
+    this.emailSuccess = false;
+
+    const payload: EmailRequest = {
+      teacherEmail: teacherEmail,
+      subject: this.emailForm.value.subject,
+      message: this.emailForm.value.message
+    };
+
+    this.http.post(
+      `${this.API_URL}/${this.currentStudent.id}/send-email`,
+      payload,
+      { responseType: 'text' }
+    ).subscribe({
+      next: () => {
+        this.emailSuccess = true;
+        this.emailForm.reset();
+        setTimeout(() => this.emailSuccess = false, 5000);
+      },
+      error: (err) => {
+        this.emailError = err.error || 'Erreur lors de l\'envoi de l\'email';
+        setTimeout(() => this.emailError = null, 5000);
+      },
+      complete: () => this.isLoading = false
+    });
   }
 
-  logout(): void {
-    console.log('Déconnexion de l\'étudiant', this.currentStudent);
-    alert(`Au revoir ${this.currentStudent}, vous êtes maintenant déconnecté`);
-    // TODO : redirection vers la page de login
+  getNotesForCourse(courseId: number): Note[] {
+    return this.notesList.filter(note => note.cours.id === courseId);
+  }
+
+  getAbsencesForCourse(courseId: number): Absence[] {
+    return this.absencesList.filter(absence => absence.cours.id === courseId);
+  }
+
+  calculateCourseAverage(courseId: number): number | null {
+    const notes = this.getNotesForCourse(courseId);
+    if (notes.length === 0) return null;
+    
+    const sum = notes.reduce((acc, note) => acc + note.valeur, 0);
+    return parseFloat((sum / notes.length).toFixed(2));
+  }
+
+  private handleError(message: string, error: any): void {
+    console.error(message, error);
+    this.emailError = message;
+    setTimeout(() => this.emailError = null, 5000);
   }
 }

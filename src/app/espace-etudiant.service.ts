@@ -14,7 +14,7 @@ const httpOptions = {
   providedIn: 'root'
 })
 export class EspaceEtudiantService {
-  private apiUrl = 'http://localhost:8080/api/etudiants';
+  private apiUrl = 'http://localhost:8081/api/etudiants';
 
   constructor(private http: HttpClient) { }
 

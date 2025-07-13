@@ -1,230 +1,430 @@
-<div class="container">
-  <!-- Vue principale de la liste des enseignants -->
-  <div *ngIf="!isDetailView">
-    <h2>Liste des Enseignants</h2>
-    
-    <div *ngIf="isLoading" class="loading">Chargement en cours...</div>
-    <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
-    
-    <table *ngIf="enseignants.length > 0" class="table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nom</th>
-          <th>Prénom</th>
-          <th>Email</th>
-          <th>Expérience</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let enseignant of enseignants">
-          <td>{{ enseignant.id }}</td>
-          <td>{{ enseignant.nom || enseignant.name || 'Non spécifié' }}</td>
-          <td>{{ enseignant.prenom || 'Non spécifié' }}</td>
-          <td>{{ enseignant.email || 'Non spécifié' }}</td>
-          <td>{{ enseignant.nbAnneeExperience || 0 }} ans</td>
-          <td>
-            <button (click)="afficherDetail(enseignant)" class="btn-details">
-              Détails
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <div *ngIf="enseignants.length === 0 && !isLoading" class="no-data">
-      Aucun enseignant trouvé
+<div class="container mt-4">
+  <h2>Gestion des Enseignants</h2>
+
+  <!-- Enseignant Selection -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>Sélectionner un enseignant</h5>
+    </div>
+    <div class="card-body">
+      <select class="form-control" (change)="onEnseignantSelect($event)">
+        <option value="">-- Sélectionner un enseignant --</option>
+        <option *ngFor="let enseignant of enseignants" [value]="enseignant.id">
+          {{ enseignant.prenom }} {{ enseignant.nom }}
+        </option>
+      </select>
     </div>
   </div>
 
-  <!-- Vue détaillée d'un enseignant -->
-  <div *ngIf="isDetailView" class="detail-view">
-    <h2>Détails de l'Enseignant</h2>
-    
-    <div class="teacher-info">
-      <div class="info-row">
-        <span class="label">Nom complet:</span>
-        <span>{{ selectedEnseignant.nom || selectedEnseignant.name }} {{ selectedEnseignant.prenom }}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Email:</span>
-        <span>{{ selectedEnseignant.email }}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Matière:</span>
-        <span>{{ selectedEnseignant.subject }}</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Expérience:</span>
-        <span>{{ selectedEnseignant.nbAnneeExperience || 0 }} années</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Classes:</span>
-        <span>{{ selectedEnseignant.nbClasse || 0 }}</span>
-      </div>
+  <!-- Selected Enseignant Info -->
+  <div *ngIf="selectedEnseignant" class="card mb-4">
+    <div class="card-header">
+      <h5>Informations sur l'enseignant</h5>
     </div>
-
-    <!-- Navigation entre sections -->
-    <div class="section-nav">
-      <button (click)="showNotes()" class="btn-nav">Gestion des Notes</button>
-      <button (click)="showAbsences()" class="btn-nav">Gestion des Absences</button>
-      <button (click)="showLeaveRequest()" class="btn-nav">Demandes de Congé</button>
-    </div>
-
-    <!-- Section Notes -->
-    <div *ngIf="showNotesSection" class="section">
-      <div *ngIf="selectedEnseignant.cours.length > 0; else noCourses">
-        <div *ngFor="let cours of selectedEnseignant.cours">
-          <h3>Gestion des Notes - {{ cours.name }}</h3>
-          
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Étudiant</th>
-                <th>TP</th>
-                <th>Examen</th>
-                <th>Moyenne</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let student of cours.students">
-                <td>{{ student.name }}</td>
-                <td>
-                  <input type="number" min="0" max="20" 
-                         [(ngModel)]="student.tp" 
-                         (change)="addTp(student, student.tp)">
-                </td>
-                <td>
-                  <input type="number" min="0" max="20" 
-                         [(ngModel)]="student.exam" 
-                         (change)="addExam(student, student.exam)">
-                </td>
-                <td>{{ calculateAverage(student.tp, student.exam) | number:'1.1-1' }}</td>
-                <td>
-                  <button (click)="removeStudentFromCourse(cours, student)" 
-                          class="btn-danger">
-                    Supprimer
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Nom:</strong> {{ selectedEnseignant.nom }}</p>
+          <p><strong>Prénom:</strong> {{ selectedEnseignant.prenom }}</p>
+          <p><strong>Email:</strong> {{ selectedEnseignant.email }}</p>
         </div>
       </div>
-      <ng-template #noCourses>
-        <div class="no-data">Aucun cours disponible</div>
-      </ng-template>
     </div>
+  </div>
 
-    <!-- Section Absences -->
-    <div *ngIf="showAbsenceSection" class="section">
-      <div *ngIf="selectedEnseignant.cours.length > 0; else noCoursesAbsence">
-        <div *ngFor="let cours of selectedEnseignant.cours">
-          <h3>Gestion des Absences - {{ cours.name }}</h3>
-          
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Étudiant</th>
-                <th>Absences</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let student of cours.students">
-                <td>{{ student.name }}</td>
-                <td>{{ student.absences || 0 }}</td>
-                <td>
-                  <button (click)="markPresent(student)" class="btn-success">Présent</button>
-                  <button (click)="markAbsent(student)" class="btn-danger">Absent</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <!-- Tabs Navigation -->
+  <ul class="nav nav-tabs" id="enseignantTabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="cours-tab" data-toggle="tab" href="#cours" role="tab">Cours ({{cours.length}})</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab">Notes</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="conges-tab" data-toggle="tab" href="#conges" role="tab">Congés</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="absences-tab" data-toggle="tab" href="#absences" role="tab">Absences</a>
+    </li>
+  </ul>
+
+  <div class="tab-content p-3 border border-top-0 rounded-bottom" id="enseignantTabsContent">
+    <!-- Cours Tab -->
+    <div class="tab-pane fade show active" id="cours" role="tabpanel">
+      <div class="d-flex justify-content-between mb-3">
+        <h4>Liste des cours</h4>
+        <button class="btn btn-primary" (click)="showCoursForm()">Ajouter un cours</button>
       </div>
-      <ng-template #noCoursesAbsence>
-        <div class="no-data">Aucun cours disponible</div>
-      </ng-template>
-    </div>
-
-    <!-- Section Demandes de Congé -->
-    <div *ngIf="showLeaveRequestSection" class="section">
-      <h3>Gestion des Congés</h3>
       
-      <div class="leave-request-form">
-        <h4>Nouvelle Demande</h4>
-        <div class="form-group">
-          <label>Date de début:</label>
-          <input type="date" [(ngModel)]="newLeaveRequest.startDate" required>
-        </div>
-        <div class="form-group">
-          <label>Date de fin:</label>
-          <input type="date" [(ngModel)]="newLeaveRequest.endDate" required>
-        </div>
-        <div class="form-group">
-          <label>Motif:</label>
-          <textarea [(ngModel)]="newLeaveRequest.reason" required></textarea>
-        </div>
-        <button (click)="submitLeaveRequest()" 
-                class="btn-submit" 
-                [disabled]="!isLeaveRequestValid()">
-          Envoyer la demande
-        </button>
+      <div *ngIf="cours.length === 0" class="alert alert-info">
+        Aucun cours trouvé pour cet enseignant.
       </div>
-
-      <div *ngIf="congeLoading" class="loading">Chargement des congés...</div>
-      <div *ngIf="congeError" class="error">{{ congeError }}</div>
-
-      <div class="leave-requests-list">
-        <h4>Historique des Demandes</h4>
-        
-        <div *ngIf="leaveRequests.length > 0; else noLeaveRequests">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Date début</th>
-                <th>Date fin</th>
-                <th>Motif</th>
-                <th>Statut</th>
-                <th *ngIf="isAdminView()">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let request of leaveRequests" [class]="getStatusClass(request.status)">
-                <td>{{ request.startDate | date:'dd/MM/yyyy' }}</td>
-                <td>{{ request.endDate | date:'dd/MM/yyyy' }}</td>
-                <td>{{ request.reason }}</td>
-                <td>
-                  <span [ngClass]="getStatusClass(request.status)">{{ request.status }}</span>
-                </td>
-                <td *ngIf="isAdminView()">
-                  <button *ngIf="request.status === 'pending'" 
-                          (click)="updateLeaveRequestStatus(request.id, 'approved')"
-                          class="btn-success">
-                    Approuver
-                  </button>
-                  <button *ngIf="request.status === 'pending'" 
-                          (click)="updateLeaveRequestStatus(request.id, 'rejected')"
-                          class="btn-danger">
-                    Rejeter
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <ng-template #noLeaveRequests>
-          <div class="no-data">Aucune demande de congé trouvée</div>
-        </ng-template>
+      
+      <div *ngIf="cours.length > 0">
+        <table class="table table-striped table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>Nom</th>
+              <th>Description</th>
+              <th>Niveau</th>
+              <th>Heures</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of cours">
+              <td>{{ c.nom }}</td>
+              <td>{{ c.description }}</td>
+              <td>{{ c.niveau }}</td>
+              <td>{{ formatHeure(c.heureDebut) }} - {{ formatHeure(c.heureFin) }}</td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-warning mr-2" (click)="showCoursForm(c)">Modifier</button>
+                  <button class="btn btn-sm btn-danger" (click)="deleteCours(c)">Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div class="actions">
-      <button (click)="retourListe()" class="btn-back">Retour à la liste</button>
-      <button (click)="logout()" class="btn-logout">Déconnexion</button>
+    <!-- Notes Tab -->
+    <div class="tab-pane fade" id="notes" role="tabpanel">
+      <div class="d-flex justify-content-between mb-3">
+        <h4>Gestion des notes</h4>
+        <button class="btn btn-primary" (click)="showNoteForm()">Ajouter une note</button>
+      </div>
+      
+      <div *ngIf="notes.length === 0" class="alert alert-info">
+        Aucune note enregistrée.
+      </div>
+      
+      <table *ngIf="notes.length > 0" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Étudiant</th>
+            <th>Cours</th>
+            <th>Note TP</th>
+            <th>Note Examen</th>
+            <th>Absences</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let n of notes">
+            <td>{{ getStudentName(n.etudiant?.id) }}</td>
+            <td>{{ getCoursName(n.cours?.id) }}</td>
+            <td>{{ n.tp }}</td>
+            <td>{{ n.exam }}</td>
+            <td>{{ n.absences }}</td>
+            <td>
+              <button class="btn btn-sm btn-warning mr-2" (click)="showNoteForm(n)">Modifier</button>
+              <button class="btn btn-sm btn-danger" (click)="deleteNote(n)">Supprimer</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Congés Tab -->
+    <div class="tab-pane fade" id="conges" role="tabpanel">
+      <div class="d-flex justify-content-between mb-3">
+        <h4>Demandes de congés</h4>
+        <button class="btn btn-primary" (click)="showCongeForm()">Demander un congé</button>
+      </div>
+      
+      <div *ngIf="conges.length === 0" class="alert alert-info">
+        Aucune demande de congé trouvée.
+      </div>
+      
+      <table *ngIf="conges.length > 0" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Motif</th>
+            <th>Période</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of conges">
+            <td>{{ c.type }}</td>
+            <td>{{ c.motif }}</td>
+            <td>{{ c.dateDebut | date:'shortDate' }} - {{ c.dateFin | date:'shortDate' }}</td>
+            <td>
+              <span class="badge" [ngClass]="getCongeStatusClass(c.statut)">
+                {{ c.statut }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Absences Tab -->
+    <div class="tab-pane fade" id="absences" role="tabpanel">
+      <div class="d-flex justify-content-between mb-3">
+        <h4>Gestion des absences</h4>
+        <button class="btn btn-primary" (click)="showAbsenceForm()">Enregistrer une absence</button>
+      </div>
+      
+      <div *ngIf="absences.length === 0" class="alert alert-info">
+        Aucune absence enregistrée.
+      </div>
+      
+      <table *ngIf="absences.length > 0" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Étudiant</th>
+            <th>Cours</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th>Motif</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of absences">
+            <td>{{ getStudentName(a.etudiant?.id) }}</td>
+            <td>{{ getCoursName(a.cours?.id) }}</td>
+            <td>{{ a.date | date:'shortDate' }}</td>
+            <td>
+              <span class="badge" [ngClass]="a.justifiee ? 'badge-success' : 'badge-danger'">
+                {{ a.justifiee ? 'Justifiée' : 'Non justifiée' }}
+              </span>
+            </td>
+            <td>{{ a.motif }}</td>
+            <td>
+              <button class="btn btn-sm btn-warning mr-2" (click)="showAbsenceForm(a)">Modifier</button>
+              <button class="btn btn-sm btn-danger" (click)="deleteAbsence(a)">Supprimer</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+
+  <!-- Cours Form Modal -->
+  <div *ngIf="isCoursFormVisible" class="modal show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ selectedCours ? 'Modifier cours' : 'Ajouter un cours' }}</h5>
+          <button type="button" class="close" (click)="closeCoursForm()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="coursForm">
+            <div class="form-group">
+              <label>Nom du cours</label>
+              <input type="text" class="form-control" formControlName="nom">
+              <div *ngIf="coursForm.get('nom')?.invalid && coursForm.get('nom')?.touched" class="text-danger">
+                Le nom est requis et doit faire au moins 3 caractères
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea class="form-control" formControlName="description"></textarea>
+              <div *ngIf="coursForm.get('description')?.invalid && coursForm.get('description')?.touched" class="text-danger">
+                La description est requise
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Niveau</label>
+              <input type="text" class="form-control" formControlName="niveau">
+              <div *ngIf="coursForm.get('niveau')?.invalid && coursForm.get('niveau')?.touched" class="text-danger">
+                Le niveau est requis
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Heure de début</label>
+                  <input type="time" class="form-control" formControlName="heureDebut" step="300">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Heure de fin</label>
+                  <input type="time" class="form-control" formControlName="heureFin" step="300">
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeCoursForm()">Annuler</button>
+          <button type="button" class="btn btn-primary" (click)="submitCoursForm()" [disabled]="coursForm.invalid">
+            {{ selectedCours ? 'Modifier' : 'Ajouter' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="isCoursFormVisible" class="modal-backdrop show"></div>
+
+  <!-- Note Form Modal -->
+  <div *ngIf="isNoteFormVisible" class="modal show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ selectedNote ? 'Modifier note' : 'Ajouter une note' }}</h5>
+          <button type="button" class="close" (click)="closeNoteForm()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="noteForm">
+            <div class="form-group">
+              <label>Étudiant</label>
+              <select class="form-control" formControlName="etudiantId">
+                <option value="">-- Sélectionner un étudiant --</option>
+                <option *ngFor="let e of etudiants" [value]="e.id">{{ e.prenom }} {{ e.nom }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cours</label>
+              <select class="form-control" formControlName="coursId">
+                <option value="">-- Sélectionner un cours --</option>
+                <option *ngFor="let c of cours" [value]="c.id">{{ c.nom }}</option>
+              </select>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Note TP (0-20)</label>
+                  <input type="number" min="0" max="20" step="0.5" class="form-control" formControlName="tp">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Note Examen (0-20)</label>
+                  <input type="number" min="0" max="20" step="0.5" class="form-control" formControlName="exam">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nombre d'absences</label>
+              <input type="number" min="0" class="form-control" formControlName="absences">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeNoteForm()">Annuler</button>
+          <button type="button" class="btn btn-primary" (click)="submitNoteForm()" [disabled]="noteForm.invalid">
+            {{ selectedNote ? 'Modifier' : 'Ajouter' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="isNoteFormVisible" class="modal-backdrop show"></div>
+
+  <!-- Congé Form Modal -->
+  <div *ngIf="isCongeFormVisible" class="modal show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Demande de congé</h5>
+          <button type="button" class="close" (click)="closeCongeForm()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="congeForm">
+            <div class="form-group">
+              <label>Type de congé</label>
+              <select class="form-control" formControlName="type">
+                <option value="ANNUEL">Annuel</option>
+                <option value="MALADIE">Maladie</option>
+                <option value="MATERNITE">Maternité</option>
+                <option value="AUTRE">Autre</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Motif</label>
+              <textarea class="form-control" formControlName="motif"></textarea>
+              <div *ngIf="congeForm.get('motif')?.invalid && congeForm.get('motif')?.touched" class="text-danger">
+                Le motif est requis et doit faire au moins 10 caractères
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Date de début</label>
+                  <input type="date" class="form-control" formControlName="dateDebut">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Date de fin</label>
+                  <input type="date" class="form-control" formControlName="dateFin">
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeCongeForm()">Annuler</button>
+          <button type="button" class="btn btn-primary" (click)="submitCongeForm()" [disabled]="congeForm.invalid">
+            Envoyer la demande
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="isCongeFormVisible" class="modal-backdrop show"></div>
+
+  <!-- Absence Form Modal -->
+  <div *ngIf="isAbsenceFormVisible" class="modal show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ selectedAbsence ? 'Modifier absence' : 'Enregistrer une absence' }}</h5>
+          <button type="button" class="close" (click)="closeAbsenceForm()">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="absenceForm">
+            <div class="form-group">
+              <label>Étudiant</label>
+              <select class="form-control" formControlName="etudiantId">
+                <option value="">-- Sélectionner un étudiant --</option>
+                <option *ngFor="let e of etudiants" [value]="e.id">{{ e.prenom }} {{ e.nom }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cours</label>
+              <select class="form-control" formControlName="coursId">
+                <option value="">-- Sélectionner un cours --</option>
+                <option *ngFor="let c of cours" [value]="c.id">{{ c.nom }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" class="form-control" formControlName="date">
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" formControlName="justifiee">
+              <label class="form-check-label">Absence justifiée</label>
+            </div>
+            <div class="form-group">
+              <label>Motif (optionnel)</label>
+              <textarea class="form-control" formControlName="motif"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeAbsenceForm()">Annuler</button>
+          <button type="button" class="btn btn-primary" (click)="submitAbsenceForm()" [disabled]="absenceForm.invalid">
+            {{ selectedAbsence ? 'Modifier' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="isAbsenceFormVisible" class="modal-backdrop show"></div>
 </div>
